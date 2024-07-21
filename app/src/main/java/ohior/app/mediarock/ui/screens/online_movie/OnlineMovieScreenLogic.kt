@@ -1,5 +1,6 @@
 package ohior.app.mediarock.ui.screens.online_movie
 
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -24,29 +25,27 @@ import ohior.app.mediarock.utils.ActionState
 import org.jsoup.Jsoup
 import java.net.ConnectException
 import java.nio.channels.UnresolvedAddressException
+import kotlin.time.Duration.Companion.minutes
 
 class OnlineMovieScreenLogic : ViewModel() {
     private var _webPageList = mutableStateListOf<WebPageItem>()
-//    private var _databaseList = mutableStateListOf<WebPageItem>()
     val databaseList: StateFlow<List<WebPageItem>> = AppDatabase.getAllMovies().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
     private val webAddress = "https://9jarocks.net/"
     private val httpClient = HttpClient(CIO) {
         engine {
-            requestTimeout = 0
+            requestTimeout = 1.minutes.inWholeMilliseconds
         }
     }
     val webPageList: List<WebPageItem> = _webPageList
-//    val databaseList: List<WebPageItem> = _databaseList
     var webPageListState by mutableStateOf<ActionState>(ActionState.None)
 
     init {
         initWebPageList()
     }
 
-    fun initWebPageList() {
+    private fun initWebPageList() {
         viewModelScope.launch {
             _webPageList.clear()
-//            _databaseList.addAll(AppDatabase.getAllMovies())
             loadWebItems()
         }
     }
@@ -60,7 +59,7 @@ class OnlineMovieScreenLogic : ViewModel() {
                     val doc = Jsoup.parse(response.bodyAsText())
                     doc.getElementsByClass("slide").forEach { slide ->
                         slide.getElementsByClass("grid-item").forEachIndexed { index, gridItem ->
-                            val description = gridItem.getElementsByClass("thumb-desc").text()
+                            val description = gridItem.getElementsByClass("thumb-desc").text().replace("\\[.*?]".toRegex(), "").trim()
                             val title: String = gridItem.getElementsByClass("thumb-title").text()
                             val movieUrl: String = gridItem.getElementsByTag("a")
                                 .attr("href") // .attr("href")
@@ -74,38 +73,25 @@ class OnlineMovieScreenLogic : ViewModel() {
                                 "(",
                                 ")"
                             )//?.groups?.get(1)?.value
-                            _webPageList.add(
-                                WebPageItem(
-                                    id = count + index.toLong(),
-                                    itemId = movieId,
-                                    description = description,
-                                    title = title,
-                                    imageUrl = imageUrl,
-                                    pageUrl = movieUrl,
-                                    key = null
-                                )
+                            val webPageItem = WebPageItem(
+                                itemId = movieId ?:System.nanoTime().toString(),
+                                description = description,
+                                title = title,
+                                imageUrl = imageUrl,
+                                pageUrl = movieUrl
                             )
+                            _webPageList.add(webPageItem)
                             if (!AppDatabase.allMovies().any { it.itemId == movieId }) {
-                                AppDatabase.addMovie(
-                                    WebPageItem(
-                                        itemId = movieId,
-                                        description = description,
-                                        title = title,
-                                        imageUrl = imageUrl,
-                                        pageUrl = movieUrl,
-                                        key = null
-                                    )
-                                )
+                                AppDatabase.addMovie(webPageItem)
                             }
                         }
                     }
                 }
                 webPageListState = if (_webPageList.isEmpty()) ActionState.Fail(message = "Got empty movies from web") else ActionState.Success
             } catch (cte: UnresolvedAddressException) {
-                webPageListState = ActionState.Fail(message = "the url is not resolved")
+                webPageListState = ActionState.Fail(message = "can't get online movies")
             } catch (cte: ConnectException) {
                 webPageListState = ActionState.Fail(message = "Error connecting to the internet")
-                debugPrint("DEBUG : "+cte.message.toString())
             } catch (cte: ConnectTimeoutException) {
                 webPageListState = ActionState.Fail(message = "There was a connection timeout")
             }

@@ -14,6 +14,9 @@ object LocalMovieType
 object PdfViewType
 
 @Serializable
+object OnboardType
+
+@Serializable
 data class WebMovieItemScreenType(val downloadUrl: String?, val description: String = "")
 
 @Serializable

@@ -20,6 +20,7 @@ import ohior.app.mediarock.ui.compose_utils.BottomBarNavigation
 import ohior.app.mediarock.ui.screens.download.DownloadScreen
 import ohior.app.mediarock.ui.screens.local_movie.LocalMovieScreen
 import ohior.app.mediarock.ui.screens.local_movie.LocalMovieScreenLogic
+import ohior.app.mediarock.ui.screens.onboard.OnboardScreen
 import ohior.app.mediarock.ui.screens.online_movie.OnlineMovieScreen
 import ohior.app.mediarock.ui.screens.online_movie.OnlineMovieScreenLogic
 import ohior.app.mediarock.ui.screens.pdfview.PdfScreenLogic
@@ -31,6 +32,7 @@ import ohior.app.mediarock.ui.screens.web_movie_item.WebMovieItemScreenLogic
 import ohior.app.mediarock.ui.theme.MediaRockTheme
 import ohior.app.mediarock.utils.DownloadType
 import ohior.app.mediarock.utils.LocalMovieType
+import ohior.app.mediarock.utils.OnboardType
 import ohior.app.mediarock.utils.OnlineMovieType
 import ohior.app.mediarock.utils.PdfViewType
 import ohior.app.mediarock.utils.VideoType
@@ -41,7 +43,6 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        enableEdgeToEdge()
-//        val data = this.initScreen().observeKey(OnlineScreenKey, OnlineScreenKey)
         installSplashScreen()
         setContent {
             MediaRockTheme {
@@ -65,7 +66,7 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun NavigationComponent(navController: NavHostController) {
-        NavHost(navController, startDestination = OnlineMovieType) {
+        NavHost(navController, startDestination = OnboardType) {
             composable<OnlineMovieType> {
                 val viewModel = viewModel<OnlineMovieScreenLogic>()
                 OnlineMovieScreen(viewModel, navController)
@@ -76,7 +77,7 @@ class MainActivity : ComponentActivity() {
             }
             composable<VideoType> {
                 val viewModel = viewModel<VideoScreenLogic>()
-                VideoScreen(viewModel, it.toRoute<VideoType>())
+                VideoScreen(viewModel, it.toRoute<VideoType>(),navController)
             }
             composable<DownloadType> {
                 DownloadScreen(it.toRoute<DownloadType>())
@@ -88,6 +89,9 @@ class MainActivity : ComponentActivity() {
             composable<PdfViewType> {
                 val viewModel = viewModel<PdfScreenLogic>()
                 PdfViewScreen(viewModel)
+            }
+            composable<OnboardType> {
+                OnboardScreen(navHostController = navController)
             }
         }
     }

@@ -25,45 +25,42 @@ import ohior.app.mediarock.ui.theme.primaryFontFamily
 import ohior.app.mediarock.whenNotNull
 import ohior.app.mediarock.whenNull
 
-private class PdfViewScreenImpl {
-    @Composable
-    fun PdfLottieAnimation(modifier: Modifier = Modifier, onClick: () -> Unit) {
-        Column(
-            modifier = modifier,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+@Composable
+private fun PdfLottieAnimation(modifier: Modifier = Modifier, onClick: () -> Unit) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        DisplayLottieAnimation(
+            modifier = Modifier
+                .size(LocalView.current.width.dp()),
+            resId = R.raw.pdf_lottie
+        )
+        ElevatedButton(
+            colors = ButtonDefaults.elevatedButtonColors(
+                containerColor = MaterialTheme.colorScheme.surface.copy(
+                    blue = 0.1f,
+                    red = 0.1f,
+                    green = 0.1f
+                ),
+                contentColor = MaterialTheme.colorScheme.onSurface
+            ), onClick = onClick
         ) {
-            DisplayLottieAnimation(
-                modifier = Modifier
-                    .size(LocalView.current.width.dp()),
-                resId = R.raw.pdf_lottie
+            Text(
+                text = "select a pdf file.",
+                style = MaterialTheme.typography.bodyLarge.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = primaryFontFamily
+                ),
+                textAlign = TextAlign.Center
             )
-            ElevatedButton(
-                colors = ButtonDefaults.elevatedButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(
-                        blue = 0.1f,
-                        red = 0.1f,
-                        green = 0.1f
-                    ),
-                    contentColor = MaterialTheme.colorScheme.onSurface
-                ), onClick = onClick
-            ) {
-                Text(
-                    text = "select a pdf file.",
-                    style = MaterialTheme.typography.bodyLarge.copy(
-                        fontWeight = FontWeight.Bold,
-                        fontFamily = primaryFontFamily
-                    ),
-                    textAlign = TextAlign.Center
-                )
-            }
         }
     }
 }
 
-private val pdfViewScreenImpl = PdfViewScreenImpl()
 
-
+// COMPOSE SCREEN
 @Composable
 fun PdfViewScreen(viewModel: PdfScreenLogic) {
     val pickPdf =
@@ -77,7 +74,7 @@ fun PdfViewScreen(viewModel: PdfScreenLogic) {
         }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopEnd) {
         if (!viewModel.isPdfSelected) {
-            pdfViewScreenImpl.PdfLottieAnimation(modifier = Modifier.fillMaxSize()) {
+            PdfLottieAnimation(modifier = Modifier.fillMaxSize()) {
                 pickPdf.launch("application/pdf")
             }
         } else {

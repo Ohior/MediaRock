@@ -2,6 +2,7 @@ package ohior.app.mediarock.ui.screens.web_movie_item
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,6 +41,7 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import ohior.app.mediarock.R
 import ohior.app.mediarock.model.RichTextModel
+import ohior.app.mediarock.ui.compose_utils.CreateLinearProgressBar
 import ohior.app.mediarock.ui.compose_utils.DisplayLottieAnimation
 import ohior.app.mediarock.ui.compose_utils.RichText
 import ohior.app.mediarock.ui.compose_utils.createShimmer
@@ -50,119 +52,113 @@ import ohior.app.mediarock.utils.DownloadType
 import ohior.app.mediarock.utils.WebMovieItemScreenType
 
 
-private class WebMovieItemScreenImpl {
-
-    @Composable
-    private fun MovieInfoList(movieInfo: List<Pair<String, String>>) {
-        Column(modifier = Modifier.fillMaxWidth()) {
-            movieInfo.forEach { pair ->
-                RichText(
-                    richTextList = listOf(
-                        RichTextModel(
-                            text = pair.first,
-                            spanStyle = SpanStyle(
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f)
-                            )
-                        ),
-                        RichTextModel(
-                            text = pair.second,
-                            spanStyle = SpanStyle(fontWeight = FontWeight.SemiBold)
+@Composable
+private fun MovieInfoList(movieInfo: List<Pair<String, String>>) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        movieInfo.forEach { pair ->
+            RichText(
+                richTextList = listOf(
+                    RichTextModel(
+                        text = pair.first,
+                        spanStyle = SpanStyle(
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.6f)
                         )
+                    ),
+                    RichTextModel(
+                        text = pair.second,
+                        spanStyle = SpanStyle(fontWeight = FontWeight.SemiBold)
                     )
                 )
-                Divider(modifier = Modifier.padding(bottom = DeepSize.Small))
-            }
-        }
-    }
-
-    @Composable
-    private fun MovieImage(viewModel: WebMovieItemScreenLogic, description: String) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = DeepSize.Medium)
-                .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.onPrimary)
-                .padding(DeepSize.Small),
-            contentAlignment = Alignment.BottomCenter
-        ) {
-            SubcomposeAsyncImage(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height((LocalView.current.height / 3).dp),
-                contentScale = ContentScale.FillBounds,
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(viewModel.imageUrl)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = "movie image",
-                loading = {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height((LocalView.current.height / 3).dp)
-                            .createShimmer(listOf(Color.LightGray, Color.DarkGray))
-                    )
-                },
-                error = {
-                    Icon(
-                        imageVector = Icons.Filled.Error, contentDescription = "Error", tint = Color.Red,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height((LocalView.current.height / 3).dp)
-                            .createShimmer(listOf(Color.LightGray, Color.DarkGray))
-                    )
-                }
             )
-            Text(
-                text = description,
-                textAlign = TextAlign.Center,
-                style = MaterialTheme.typography.bodySmall,
-                modifier = Modifier
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(
-                        MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
-                    )
-                    .padding(vertical = DeepSize.Small),
-            )
-        }
-
-    }
-
-
-    @Composable
-    fun DisplayMoviePage(
-        description: String,
-        viewModel: WebMovieItemScreenLogic,
-        navController: NavHostController
-    ) {
-        LazyVerticalGrid(columns = GridCells.Fixed(2)) {
-            item(span = { GridItemSpan(currentLineSpan = 2) }) {
-                MovieImage(viewModel, description)
-            }
-            item(span = { GridItemSpan(currentLineSpan = 2) }) {
-                MovieInfoList(viewModel.movieInfoList)
-            }
-            items(viewModel.downloadUrlList) { downloadPair ->
-                ElevatedButton(onClick = {
-                    navController.navigate(DownloadType(downloadPair.first))
-                }) {
-                    Icon(
-                        imageVector = Icons.Filled.Download,
-                        contentDescription = "download file"
-                    )
-                    Text(
-                        text = downloadPair.second,
-                        style = MaterialTheme.typography.labelMedium
-                    )
-                }
-            }
+            Divider(modifier = Modifier.padding(bottom = DeepSize.Small))
         }
     }
 }
 
-private val webMovieItemScreenImpl = WebMovieItemScreenImpl()
+@Composable
+private fun MovieImage(viewModel: WebMovieItemScreenLogic, description: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(bottom = DeepSize.Medium)
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.onPrimary)
+            .padding(DeepSize.Small),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(DeepSize.Small)
+    ) {
+        SubcomposeAsyncImage(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height((LocalView.current.width / 2).dp),
+            contentScale = ContentScale.FillBounds,
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(viewModel.imageUrl)
+                .crossfade(true)
+                .build(),
+            contentDescription = "movie image",
+            loading = {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .createShimmer(listOf(Color.LightGray, Color.DarkGray))
+                )
+//                        .height((LocalView.current.height / 3).dp)
+            },
+            error = {
+                Icon(
+                    imageVector = Icons.Filled.Error,
+                    contentDescription = "Error",
+                    tint = Color.Red,
+                )
+            }
+        )
+        Text(
+            text = description,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.medium)
+                .background(
+                    MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)
+                )
+                .padding(vertical = DeepSize.Small),
+        )
+    }
+
+}
+
+
+@Composable
+private fun DisplayMoviePage(
+    description: String,
+    viewModel: WebMovieItemScreenLogic,
+    navController: NavHostController
+) {
+    LazyVerticalGrid(columns = GridCells.Fixed(2)) {
+        item(span = { GridItemSpan(currentLineSpan = 2) }) {
+            MovieImage(viewModel, description)
+        }
+        item(span = { GridItemSpan(currentLineSpan = 2) }) {
+            MovieInfoList(viewModel.movieInfoList)
+        }
+        items(viewModel.downloadUrlList) { downloadPair ->
+            ElevatedButton(onClick = {
+                navController.navigate(DownloadType(downloadPair.first))
+            }) {
+                Icon(
+                    imageVector = Icons.Filled.Download,
+                    contentDescription = "download file"
+                )
+                Text(
+                    text = downloadPair.second,
+                    style = MaterialTheme.typography.labelMedium
+                )
+            }
+        }
+    }
+}
 
 @Composable
 fun WebMovieItemScreen(
@@ -170,13 +166,13 @@ fun WebMovieItemScreen(
     webMovieItemScreenType: WebMovieItemScreenType,
     navController: NavHostController
 ) {
-    LaunchedEffect(key1 = Unit) {
+    LaunchedEffect(key1 = null) {
         viewModel.loadDownloadPage(webMovieItemScreenType)
     }
     Column(modifier = Modifier.fillMaxSize()) {
         when (viewModel.isContentLoaded) {
             is ActionState.None -> {
-                LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                CreateLinearProgressBar(colors = listOf(Color.Red, Color.Yellow, Color.Blue))
                 DisplayLottieAnimation(
                     modifier = Modifier.size((LocalView.current.width / 2).dp),
                     resId = R.raw.empty_lottie
@@ -184,7 +180,7 @@ fun WebMovieItemScreen(
             }
 
             is ActionState.Success -> {
-                webMovieItemScreenImpl.DisplayMoviePage(
+                DisplayMoviePage(
                     description = webMovieItemScreenType.description,
                     viewModel = viewModel,
                     navController
@@ -192,21 +188,11 @@ fun WebMovieItemScreen(
             }
 
             is ActionState.Fail -> {
-                Column(modifier = Modifier
-                    .clickable { viewModel.loadDownloadPage(webMovieItemScreenType) }) {
-                    DisplayLottieAnimation(
-                        modifier = Modifier.size((LocalView.current.width / 2).dp),
-                        resId = R.raw.error_lottie
-                    )
-                    Text(
-                        text = "Error, ${(viewModel.isContentLoaded as ActionState.Fail).message}",
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            fontWeight = FontWeight.Bold,
-                            fontFamily = primaryFontFamily
-                        ),
-                        textAlign = TextAlign.Center
-                    )
-                }
+                DisplayLottieAnimation(
+                    modifier = Modifier.size((LocalView.current.width / 2).dp),
+                    resId = R.raw.error_lottie,
+                    text = (viewModel.isContentLoaded as ActionState.Fail).message,
+                )
             }
 
             is ActionState.Loading -> Unit

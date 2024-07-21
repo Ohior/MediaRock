@@ -4,43 +4,82 @@
   "_note3": "If you have VCS merge conflicts, you must resolve them according to ObjectBox docs.",
   "entities": [
     {
-      "id": "1:5302940744032717425",
-      "lastPropertyId": "7:6923806951680559333",
-      "name": "WebPageItem",
+      "id": "1:7715950553483293744",
+      "lastPropertyId": "7:1728177079770724644",
+      "name": "MovieItem",
       "properties": [
         {
-          "id": "1:5113997146210394788",
+          "id": "1:4955104323394984715",
           "name": "id",
           "type": 6,
           "flags": 1
         },
         {
-          "id": "2:5433170296641715207",
+          "id": "2:8002623478920266587",
+          "name": "itemId",
+          "type": 6
+        },
+        {
+          "id": "3:4977728571336607967",
+          "name": "name",
+          "type": 9
+        },
+        {
+          "id": "4:7734111389774684142",
+          "name": "path",
+          "type": 9
+        },
+        {
+          "id": "5:3900235741710918338",
+          "name": "duration",
+          "type": 9
+        },
+        {
+          "id": "6:5443289848582469854",
+          "name": "size",
+          "type": 9
+        },
+        {
+          "id": "7:1728177079770724644",
+          "name": "lastModified",
+          "type": 9
+        }
+      ],
+      "relations": []
+    },
+    {
+      "id": "2:3735400432469991037",
+      "lastPropertyId": "6:1826990497248527313",
+      "name": "WebPageItem",
+      "properties": [
+        {
+          "id": "1:852950892966139031",
+          "name": "id",
+          "type": 6,
+          "flags": 1
+        },
+        {
+          "id": "2:6289272389942304594",
           "name": "itemId",
           "type": 9
         },
         {
-          "id": "3:2838657380978845046",
-          "name": "key",
-          "type": 9
-        },
-        {
-          "id": "4:7946675019965923132",
+          "id": "3:4942103890760400625",
           "name": "title",
           "type": 9
         },
         {
-          "id": "5:9045062641076224341",
+          "id": "4:2739277754023746109",
           "name": "description",
           "type": 9
         },
         {
-          "id": "6:1971226445391362512",
+          "id": "5:8785287198860753534",
           "name": "imageUrl",
           "type": 9
         },
         {
-          "id": "7:6923806951680559333",
+          "id": "6:1826990497248527313",
           "name": "pageUrl",
           "type": 9
         }
@@ -48,7 +87,7 @@
       "relations": []
     }
   ],
-  "lastEntityId": "1:5302940744032717425",
+  "lastEntityId": "2:3735400432469991037",
   "lastIndexId": "0:0",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",

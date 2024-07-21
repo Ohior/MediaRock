@@ -82,9 +82,9 @@ dependencies {
 //    serializable
     implementation(libs.kotlinx.serialization.json)
 //    video player
-    implementation(libs.androidx.media3.exoplayer)
-    implementation(libs.androidx.media3.exoplayer.dash)
-    implementation(libs.androidx.media3.ui)
+    implementation("androidx.media3:media3-exoplayer:1.3.1")
+    implementation("androidx.media3:media3-ui:1.3.1")
+    implementation("androidx.media3:media3-common:1.3.1")
 //    lottie
     implementation(libs.lottie.compose)
     // pdf viewer

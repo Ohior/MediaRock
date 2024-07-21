@@ -9,14 +9,19 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.BottomNavigation
+import androidx.compose.material.BottomNavigationItem
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Movie
-import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.ScreenRotation
-import androidx.compose.material.icons.filled.Web
+import androidx.compose.material.icons.outlined.Movie
+import androidx.compose.material.icons.outlined.PictureAsPdf
+import androidx.compose.material.icons.outlined.Web
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -34,11 +39,17 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.NavDestination.Companion.hierarchy
@@ -52,7 +63,9 @@ import com.airbnb.lottie.compose.animateLottieCompositionAsState
 import com.airbnb.lottie.compose.rememberLottieComposition
 import ohior.app.mediarock.model.RichTextModel
 import ohior.app.mediarock.ui.theme.White
+import ohior.app.mediarock.ui.theme.primaryFontFamily
 import ohior.app.mediarock.utils.LocalMovieType
+import ohior.app.mediarock.utils.OnboardType
 import ohior.app.mediarock.utils.OnlineMovieType
 import ohior.app.mediarock.utils.PdfViewType
 import ohior.app.mediarock.utils.ScreenHolder
@@ -61,7 +74,17 @@ import ohior.app.mediarock.whenNotNull
 
 
 @Composable
-fun DisplayLottieAnimation(modifier: Modifier, resId: Int) {
+fun DisplayLottieAnimation(
+    modifier: Modifier,
+    resId: Int,
+    size: Dp = 300.dp,
+    text: String? = null,
+    style: TextStyle = MaterialTheme.typography.bodyLarge.copy(
+        fontWeight = FontWeight.Bold,
+        fontFamily = primaryFontFamily,
+        textAlign = TextAlign.Center
+    )
+) {
     val lottieComposition by rememberLottieComposition(
         spec = LottieCompositionSpec.RawRes(resId)
     )
@@ -70,18 +93,30 @@ fun DisplayLottieAnimation(modifier: Modifier, resId: Int) {
         iterations = LottieConstants.IterateForever,
         speed = 0.5F
     )
-    LottieAnimation(
+    Column(
         modifier = modifier,
-        composition = lottieComposition,
-        progress = { progressLottie }
-    )
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        LottieAnimation(
+            modifier = Modifier.size(size),
+            composition = lottieComposition,
+            progress = { progressLottie }
+        )
+        text.whenNotNull { Text(text = it, style = style) }
+    }
 }
 
 
 @Composable
-fun RichText(modifier: Modifier = Modifier, richTextList: List<RichTextModel>) {
+fun RichText(
+    modifier: Modifier = Modifier,
+    richTextList: List<RichTextModel>,
+    textAlign: TextAlign? = null
+) {
     Text(
         modifier = modifier,
+        textAlign = textAlign,
         style = MaterialTheme.typography.titleMedium.copy(
             color = MaterialTheme.colorScheme.onPrimary
         ),
@@ -106,8 +141,8 @@ fun AppLifecycleObserver(
     onStop: () -> Unit = {},
     onDestroy: () -> Unit = {},
     onAny: () -> Unit = {},
+    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
 ) {
-    val lifecycleOwner = LocalLifecycleOwner.current
 
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
@@ -155,17 +190,17 @@ fun BottomBarNavigation(
     val bottomBar = listOf(
         ScreenHolder(
             screen = OnlineMovieType,
-            imageVector = Icons.Filled.Web,
+            imageVector = Icons.Outlined.Web,
             contentDescription = "Online movies"
         ),
         ScreenHolder(
             screen = LocalMovieType,
-            imageVector = Icons.Filled.Movie,
+            imageVector = Icons.Outlined.Movie,
             contentDescription = "Local movies"
         ),
         ScreenHolder(
             screen = PdfViewType,
-            imageVector = Icons.Filled.PictureAsPdf,
+            imageVector = Icons.Outlined.PictureAsPdf,
             contentDescription = "PDF reader"
         )
     )
@@ -174,7 +209,10 @@ fun BottomBarNavigation(
     val currentDestination = navBackStackEntry?.destination
 
     currentDestination.whenNotNull { curDes ->
-        if (!curDes.hierarchy.any { it.hasRoute(VideoType::class) }) {
+        if (
+            !curDes.hierarchy.any { it.hasRoute(VideoType::class) } &&
+            !curDes.hierarchy.any { it.hasRoute(OnboardType::class) }
+        ) {
             BottomNavigation(
                 backgroundColor = MaterialTheme.colorScheme.surface.copy(
                     blue = 0.2f,
@@ -183,9 +221,11 @@ fun BottomBarNavigation(
                 )
             ) {
                 bottomBar.forEach { bb ->
-                    BottomNavigationButton(
-                        modifier = Modifier.weight(1F),
-                        selected = curDes.hierarchy.any { it.route == bb.screen.javaClass.name },
+                    BottomNavigationItem(
+//                        modifier = Modifier.weight(1F),
+                        alwaysShowLabel = !curDes.hierarchy.any { it.route == bb.screen.javaClass.name },
+                        enabled = !curDes.hierarchy.any { it.route == bb.screen.javaClass.name },
+                        selected = false,//curDes.hierarchy.any { it.route == bb.screen.javaClass.name },
                         onClick = {
                             navController.navigate(bb.screen) {
                                 // Pop up to the start destination of the graph to
@@ -205,7 +245,7 @@ fun BottomBarNavigation(
                         label = {
                             Text(
                                 bb.contentDescription,
-                                style = MaterialTheme.typography.bodySmall
+                                style = MaterialTheme.typography.labelSmall
                             )
                         }
                     )
@@ -234,7 +274,21 @@ fun RotateScreenButton(modifier: Modifier = Modifier) {
     }
 }
 
-fun Modifier.createShimmer(colors: List<Color>): Modifier = composed {
+@Composable
+fun CreateLinearProgressBar(
+    colors: List<Color>,
+    depth: Dp = 10.dp,
+    speedMillis: Int = 2000
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(depth)
+            .createShimmer(colors, speedMillis = speedMillis)
+    )
+}
+
+fun Modifier.createShimmer(colors: List<Color>, speedMillis: Int = 2000): Modifier = composed {
     val size = remember {
         mutableStateOf(IntSize.Zero)
     }
@@ -242,7 +296,7 @@ fun Modifier.createShimmer(colors: List<Color>): Modifier = composed {
     val startOffsetX = transition.animateFloat(
         initialValue = -2 * size.value.width.toFloat(),
         targetValue = 2 * size.value.width.toFloat(),
-        animationSpec = infiniteRepeatable(animation = tween(durationMillis = 2000)),
+        animationSpec = infiniteRepeatable(animation = tween(durationMillis = speedMillis)),
         label = "shimmer animation"
     )
     background(

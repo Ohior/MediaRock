@@ -11,10 +11,10 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ohior.app.mediarock.debugPrint
-import ohior.app.mediarock.openWebUrlPage
 import ohior.app.mediarock.utils.ActionState
 import ohior.app.mediarock.utils.WebMovieItemScreenType
 import ohior.app.mediarock.whenNotNull
+import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.select.Elements
 
@@ -34,7 +34,7 @@ class WebMovieItemScreenLogic : ViewModel() {
             _movieInfoList.clear()
             try {
                 webMovieItemScreenType.downloadUrl.whenNotNull { downloadUrl ->
-                    downloadUrl.openWebUrlPage { document ->
+                    Jsoup.connect(downloadUrl).get().let{ document ->
                         val iu = async { getImageUrl(document) }
                         val du = async { getDownloadUrl(document) }
                         val mi = async { getMovieInfo(document) }

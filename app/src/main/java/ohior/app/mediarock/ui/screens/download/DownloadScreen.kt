@@ -23,8 +23,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.viewinterop.AndroidView
+import ohior.app.mediarock.ui.compose_utils.CreateLinearProgressBar
 import ohior.app.mediarock.ui.theme.DeepSize
 import ohior.app.mediarock.ui.theme.primaryFontFamily
 import ohior.app.mediarock.utils.DownloadType
@@ -49,6 +51,8 @@ private fun handleDownloads(url: String, context: Context, mimeType: String, use
     Toast.makeText(context, "download don start!", Toast.LENGTH_SHORT).show()
 }
 
+
+// COMPOSE SCREEN
 @Composable
 fun DownloadScreen(downloadType: DownloadType) {
     val isPageLoading = remember {
@@ -80,7 +84,7 @@ fun DownloadScreen(downloadType: DownloadType) {
                     )
                 )
             },
-            text = { LinearProgressIndicator() },
+            text = {                CreateLinearProgressBar(colors = listOf(Color.Red, Color.Yellow, Color.Blue)) },
             onDismissRequest = { isPageLoading.value = false },
             buttons = {})
     }
