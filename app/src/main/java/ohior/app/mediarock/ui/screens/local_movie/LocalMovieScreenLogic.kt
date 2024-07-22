@@ -3,10 +3,6 @@ package ohior.app.mediarock.ui.screens.local_movie
 import android.content.Context
 import android.os.Build
 import android.provider.MediaStore
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
@@ -19,7 +15,6 @@ import ohior.app.mediarock.debugPrint
 import ohior.app.mediarock.formatFileSize
 import ohior.app.mediarock.model.MovieItem
 import ohior.app.mediarock.service.AppDatabase
-import ohior.app.mediarock.utils.ActionState
 
 
 class LocalMovieScreenLogic : ViewModel() {
@@ -27,8 +22,8 @@ class LocalMovieScreenLogic : ViewModel() {
         AppDatabase.getAllLocalMovies().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
 //    private var _localMovieList = mutableStateListOf<MovieItem>()
-//    val localMovieList : List<MovieItem> = _localMovieList
-    var movieItemListState by mutableStateOf<ActionState>(ActionState.None)
+//    val localMovieList: List<MovieItem> = AppDatabase.allLocalMovies()
+
 
     private val collection =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -59,57 +54,57 @@ class LocalMovieScreenLogic : ViewModel() {
 //        TimeUnit.MILLISECONDS.convert(5, TimeUnit.MINUTES).toString()
 //    )
 
-
-    fun getAllVideoFiles(context: Context) {
-        viewModelScope.launch(Dispatchers.IO) {
-            movieItemListState = ActionState.Loading
-            val query = context.contentResolver.query(
-                collection,
-                projection,
-                null,
-                null,
-                sortOrder
-            )
-            query?.use { cursor ->
-                // Cache column indices.
-                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
-                val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)
-                val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION)
-                val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE)
-                val pathColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)
-                val modifiedColumn =
-                    cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_MODIFIED)
-                while (cursor.moveToNext()) {
-                    // Get values of columns for a given video.
-                    val id = cursor.getLong(idColumn)
-                    val name = cursor.getString(nameColumn)
-                    val duration = cursor.getInt(durationColumn)
-                    val size = cursor.getInt(sizeColumn)
-                    val path = cursor.getString(pathColumn)
-                    val modified = cursor.getInt(modifiedColumn)
-
-                    // Stores column values, the contentUri, and the thumbnail in a local object.
-                    val movieItem = MovieItem(
-                        itemId = id,
-                        name = name,
-                        duration = convertLongToTime(duration.toLong()),
-                        size = formatFileSize(size.toLong()),
-                        lastModified = convertLongToTime(modified.toLong(), true),
-                        path = path,
-//                        thumbnail = thumbnail
-                    )
-                    if (!AppDatabase.allLocalMovies().any { it.itemId == movieItem.itemId }) {
-                        AppDatabase.addLocalMovie(movieItem)
-                    }
-                }
-//                val movies = AppDatabase.allLocalMovies()
-//                for (movie in movies) {
+//
+//    fun getAllVideoFiles(context: Context) {
+//        viewModelScope.launch(Dispatchers.IO) {
+//            val query = context.contentResolver.query(
+//                collection,
+//                projection,
+//                null,
+//                null,
+//                sortOrder
+//            )
+//            query?.use { cursor ->
+//                // Cache column indices.
+//                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
+//                val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)
+//                val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION)
+//                val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE)
+//                val pathColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATA)
+//                val modifiedColumn =
+//                    cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DATE_MODIFIED)
+//                var count = 0
+//                while (cursor.moveToNext()) {
+//                    count++
+//                    // Get values of columns for a given video.
+//                    val id = cursor.getLong(idColumn)
+//                    val name = cursor.getString(nameColumn)
+//                    val duration = cursor.getInt(durationColumn)
+//                    val size = cursor.getInt(sizeColumn)
+//                    val path = cursor.getString(pathColumn)
+//                    val modified = cursor.getInt(modifiedColumn)
+//
+//                    // Stores column values, the contentUri, and the thumbnail in a local object.
+//                    val movieItem = MovieItem(
+//                        itemId = id,
+//                        name = name,
+//                        duration = convertLongToTime(duration.toLong()),
+//                        size = formatFileSize(size.toLong()),
+//                        lastModified = convertLongToTime(modified.toLong(), true),
+//                        path = path,
+////                        thumbnail = thumbnail
+//                    )
+//                    if (!AppDatabase.allLocalMovies().any { it.itemId == movieItem.itemId }) {
+//                        AppDatabase.addLocalMovie(movieItem)
+//                    }
 //                }
-
-                movieItemListState = ActionState.None
-            }
-        }
-    }
+//                debugPrint("Local movie count: $count")
+////                val movies = AppDatabase.allLocalMovies()
+////                for (movie in movies) {
+////                }
+//            }
+//        }
+//    }
 
     override fun onCleared() {
         debugPrint("Local movie cleared")

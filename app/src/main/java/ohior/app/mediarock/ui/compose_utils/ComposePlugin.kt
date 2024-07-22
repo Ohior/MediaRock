@@ -7,21 +7,26 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ScreenRotation
 import androidx.compose.material.icons.outlined.Movie
 import androidx.compose.material.icons.outlined.PictureAsPdf
 import androidx.compose.material.icons.outlined.Web
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -37,6 +42,7 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
@@ -77,7 +83,7 @@ import ohior.app.mediarock.whenNotNull
 fun DisplayLottieAnimation(
     modifier: Modifier,
     resId: Int,
-    size: Dp = 300.dp,
+    lottieSize: Dp = 300.dp,
     text: String? = null,
     style: TextStyle = MaterialTheme.typography.bodyLarge.copy(
         fontWeight = FontWeight.Bold,
@@ -99,7 +105,7 @@ fun DisplayLottieAnimation(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         LottieAnimation(
-            modifier = Modifier.size(size),
+            modifier = Modifier.size(lottieSize),
             composition = lottieComposition,
             progress = { progressLottie }
         )
@@ -143,7 +149,6 @@ fun AppLifecycleObserver(
     onAny: () -> Unit = {},
     lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
 ) {
-
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             when (event) {
@@ -165,23 +170,6 @@ fun AppLifecycleObserver(
     }
 }
 
-@Composable
-fun BottomNavigationButton(
-    modifier: Modifier = Modifier,
-    selected: Boolean,
-    onClick: () -> Unit,
-    icon: @Composable () -> Unit,
-    label: @Composable () -> Unit
-) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center,
-        modifier = modifier.clickable { onClick() }
-    ) {
-        icon()
-        if (!selected) label() else Spacer(modifier = Modifier)
-    }
-}
 
 @Composable
 fun BottomBarNavigation(
@@ -257,14 +245,10 @@ fun BottomBarNavigation(
 }
 
 @Composable
-fun RotateScreenButton(modifier: Modifier = Modifier) {
-    val isVertical = remember {
-        mutableStateOf(true)
-    }
+fun RotateScreenButton(modifier: Modifier = Modifier, isVertical: Boolean) {
     val context = LocalContext.current
     IconButton(onClick = {
-        isVertical.value = !isVertical.value
-        (context as Activity).requestedOrientation = if (isVertical.value) {
+        (context as Activity).requestedOrientation = if (isVertical) {
             ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         } else {
             ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
@@ -310,4 +294,29 @@ fun Modifier.createShimmer(colors: List<Color>, speedMillis: Int = 2000): Modifi
         )
     )
         .onGloballyPositioned { size.value = it.size }
+}
+
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+fun PullToRefresh(
+    isRefreshing: Boolean,
+    onRefresh: () -> Unit,
+    content: @Composable () -> Unit,
+) {
+    val pullRefreshState = rememberPullRefreshState(isRefreshing, onRefresh)
+    Box(
+        modifier = Modifier
+            .pullRefresh(pullRefreshState)
+    ) {
+        content()
+        PullRefreshIndicator(
+            refreshing = isRefreshing,
+            state = pullRefreshState,
+            modifier = Modifier.align(Alignment.TopCenter),
+            backgroundColor = Color.Red,
+            contentColor = Color.Yellow
+        )
+
+    }
 }

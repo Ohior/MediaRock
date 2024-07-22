@@ -2,7 +2,6 @@ package ohior.app.mediarock.ui.screens.online_movie
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +22,7 @@ import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
@@ -48,14 +49,13 @@ import ohior.app.mediarock.R
 import ohior.app.mediarock.getWhenNotNull
 import ohior.app.mediarock.model.WebPageItem
 import ohior.app.mediarock.service.AppDatabase
-import ohior.app.mediarock.ui.compose_utils.CreateLinearProgressBar
 import ohior.app.mediarock.ui.compose_utils.DisplayLottieAnimation
+import ohior.app.mediarock.ui.compose_utils.PullToRefresh
 import ohior.app.mediarock.ui.compose_utils.createShimmer
 import ohior.app.mediarock.ui.theme.DeepSize
 import ohior.app.mediarock.utils.ActionState
 import ohior.app.mediarock.utils.WebMovieItemScreenType
 import ohior.app.mediarock.whenNotNull
-
 
 
 @Composable
@@ -176,7 +176,7 @@ private fun LazyStaggeredGridItemScope.DBMovies(webScrap: WebPageItem, onClick: 
 
 @Composable
 private fun LazyItemScope.NewMoviesRow(webScrap: WebPageItem, onClick: () -> Unit) {
-    Column(
+    Box(
         modifier = Modifier
             .width((LocalView.current.width / 3).dp)
             .height((LocalView.current.width / 2).dp)
@@ -185,13 +185,11 @@ private fun LazyItemScope.NewMoviesRow(webScrap: WebPageItem, onClick: () -> Uni
             .background(MaterialTheme.colorScheme.tertiary)
             .animateItem()
             .clickable { onClick() },
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-
+        contentAlignment = Alignment.BottomCenter
     ) {
         SubcomposeAsyncImage(
             modifier = Modifier
-                .weight(1f)
+                .fillMaxSize()
                 .padding(DeepSize.Small),
             model = ImageRequest.Builder(LocalContext.current)
                 .data(webScrap.imageUrl)
@@ -222,6 +220,9 @@ private fun LazyItemScope.NewMoviesRow(webScrap: WebPageItem, onClick: () -> Uni
             contentDescription = "Movie Image",
         )
         Text(
+            modifier = Modifier
+                .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f))
+                .padding(DeepSize.Small),
             text = webScrap.title.getWhenNotNull("no title") { it },
             overflow = TextOverflow.Ellipsis,
             maxLines = 2,
@@ -238,89 +239,25 @@ private fun LazyItemScope.NewMoviesRow(webScrap: WebPageItem, onClick: () -> Uni
 
 }
 
-
 @Composable
-private fun LazyStaggeredGridItemScope.NewMovies(webScrap: WebPageItem, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(DeepSize.Small)
-            .clip(MaterialTheme.shapes.small)
-            .background(MaterialTheme.colorScheme.tertiary)
-            .animateItem()
-            .clickable { onClick() },
-        verticalArrangement = Arrangement.spacedBy(10.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
+private fun OnlineMovies(
+    databaseList: List<WebPageItem>,
+    webPageList: List<WebPageItem>,
+    navController: NavHostController
+) {
 
-    ) {
-        SubcomposeAsyncImage(
-            modifier = Modifier
-                .height(300.dp)
-                .padding(DeepSize.Small),
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(webScrap.imageUrl)
-                .crossfade(true)
-                .build(),
-            loading = {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .createShimmer(
-                            listOf(
-                                Color.Black.copy(alpha = 0.1f),
-                                Color.Black.copy(alpha = 0.9f)
-                            )
-                        )
-                )
-            },
-            error = {
-                Icon(
-                    imageVector = Icons.Filled.Error,
-                    contentDescription = "Error",
-                    tint = Color.Red,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                )
-            },
-            contentScale = ContentScale.FillBounds,
-            contentDescription = "Movie Image",
-        )
-        Text(
-            text = webScrap.title.getWhenNotNull("no title") { it },
-            overflow = TextOverflow.Ellipsis,
-            maxLines = 2,
-            color = MaterialTheme.colorScheme.onPrimary,
-            fontWeight = FontWeight.SemiBold,
-            style = MaterialTheme.typography.bodyMedium
-        )
-//        MovieDetails(
-//            modifier = Modifier
-//                .padding(DeepSize.Small), webScrap,
-//            maxDetailLines = 3
-//        )
-    }
 
-}
-
-@Composable
-private fun OnlineMovies(viewModel: OnlineMovieScreenLogic, navController: NavHostController) {
-
-    val databaseList by viewModel.databaseList.collectAsState()
-
-    val newMovie by remember {
-        mutableStateOf(viewModel.webPageList)
-    }
     LazyVerticalStaggeredGrid(columns = StaggeredGridCells.Fixed(2)) {
         item(
             span = StaggeredGridItemSpan.FullLine
         ) {
             LazyRow {
-                items(newMovie.size, key = { newMovie[it].itemId }) { web ->
-                    NewMoviesRow(webScrap = newMovie[web]) {
+                items(webPageList.size, key = { webPageList[it].itemId }) { web ->
+                    NewMoviesRow(webScrap = webPageList[web]) {
                         navController.navigate(
                             WebMovieItemScreenType(
-                                downloadUrl = newMovie[web].pageUrl,
-                                description = newMovie[web].description
+                                downloadUrl = webPageList[web].pageUrl,
+                                description = webPageList[web].description
                             )
                         )
                     }
@@ -328,7 +265,7 @@ private fun OnlineMovies(viewModel: OnlineMovieScreenLogic, navController: NavHo
             }
         }
 
-        items(databaseList.size, key = {databaseList[it].id}) { dbMovie ->
+        items(databaseList.size, key = { databaseList[it].id }) { dbMovie ->
             DBMovies(webScrap = databaseList[dbMovie]) {
                 navController.navigate(
                     WebMovieItemScreenType(
@@ -344,27 +281,22 @@ private fun OnlineMovies(viewModel: OnlineMovieScreenLogic, navController: NavHo
 
 // COMPOSE SCREEN
 @Composable
-fun OnlineMovieScreen(viewModel: OnlineMovieScreenLogic, navController: NavHostController) {
+fun OnlineMovieScreen(navController: NavHostController) {
+    val viewModel = viewModel<OnlineMovieScreenLogic>()
+    val databaseList by viewModel.databaseList.collectAsState()
+
     Column(
         modifier = Modifier
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         when (viewModel.webPageListState) {
-            is ActionState.None -> {
-                CreateLinearProgressBar(colors = listOf(Color.Red, Color.Yellow, Color.Blue))
-                if (AppDatabase.allMovies().isEmpty()) {
-                    DisplayLottieAnimation(
-                        modifier = Modifier,
-                        resId = R.raw.empty_lottie
-                    )
-                } else {
-                    OnlineMovies(viewModel = viewModel, navController)
-                }
-            }
-
             is ActionState.Success -> {
-                OnlineMovies(viewModel = viewModel, navController)
+                OnlineMovies(
+                    databaseList = databaseList,
+                    webPageList = viewModel.webPageList,
+                    navController
+                )
             }
 
             is ActionState.Fail -> {
@@ -375,7 +307,25 @@ fun OnlineMovieScreen(viewModel: OnlineMovieScreenLogic, navController: NavHostC
                 )
             }
 
-            ActionState.Loading -> Unit
+            else -> {
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color.Red,
+                    trackColor = Color.Yellow,
+                )
+                if (AppDatabase.allMovies().isEmpty()) {
+                    DisplayLottieAnimation(
+                        modifier = Modifier.fillMaxSize(),
+                        resId = R.raw.empty_lottie
+                    )
+                } else {
+                    OnlineMovies(
+                        databaseList = databaseList,
+                        webPageList = viewModel.webPageList,
+                        navController
+                    )
+                }
+            }
         }
     }
 }

@@ -1,6 +1,5 @@
 package ohior.app.mediarock.ui.screens.online_movie
 
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -29,7 +28,12 @@ import kotlin.time.Duration.Companion.minutes
 
 class OnlineMovieScreenLogic : ViewModel() {
     private var _webPageList = mutableStateListOf<WebPageItem>()
-    val databaseList: StateFlow<List<WebPageItem>> = AppDatabase.getAllMovies().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    val databaseList: StateFlow<List<WebPageItem>> =
+        AppDatabase.getAllMovies().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+
+//    private var _databaseList = mutableStateListOf<WebPageItem>()
+//    val databaseList: List<WebPageItem> = _databaseList
+
     private val webAddress = "https://9jarocks.net/"
     private val httpClient = HttpClient(CIO) {
         engine {
@@ -43,8 +47,10 @@ class OnlineMovieScreenLogic : ViewModel() {
         initWebPageList()
     }
 
-    private fun initWebPageList() {
+    fun initWebPageList() {
         viewModelScope.launch {
+//            _databaseList.clear()
+//            _databaseList.addAll(AppDatabase.allMovies())
             _webPageList.clear()
             loadWebItems()
         }
@@ -54,12 +60,13 @@ class OnlineMovieScreenLogic : ViewModel() {
         withContext(Dispatchers.IO) {
             try {
                 httpClient.use { client ->
-                    val count = AppDatabase.count + 1
+                    webPageListState = ActionState.Loading
                     val response = client.get(webAddress)
                     val doc = Jsoup.parse(response.bodyAsText())
                     doc.getElementsByClass("slide").forEach { slide ->
-                        slide.getElementsByClass("grid-item").forEachIndexed { index, gridItem ->
-                            val description = gridItem.getElementsByClass("thumb-desc").text().replace("\\[.*?]".toRegex(), "").trim()
+                        slide.getElementsByClass("grid-item").forEachIndexed { _, gridItem ->
+                            val description = gridItem.getElementsByClass("thumb-desc").text()
+                                .replace("\\[.*?]".toRegex(), "").trim()
                             val title: String = gridItem.getElementsByClass("thumb-title").text()
                             val movieUrl: String = gridItem.getElementsByTag("a")
                                 .attr("href") // .attr("href")
@@ -74,7 +81,7 @@ class OnlineMovieScreenLogic : ViewModel() {
                                 ")"
                             )//?.groups?.get(1)?.value
                             val webPageItem = WebPageItem(
-                                itemId = movieId ?:System.nanoTime().toString(),
+                                itemId = movieId ?: System.nanoTime().toString(),
                                 description = description,
                                 title = title,
                                 imageUrl = imageUrl,
@@ -87,7 +94,9 @@ class OnlineMovieScreenLogic : ViewModel() {
                         }
                     }
                 }
-                webPageListState = if (_webPageList.isEmpty()) ActionState.Fail(message = "Got empty movies from web") else ActionState.Success
+                webPageListState =
+                    if (_webPageList.isEmpty()) ActionState.Fail(message = "Got empty movies from web") else ActionState.Success
+                debugPrint("Done loading movies")
             } catch (cte: UnresolvedAddressException) {
                 webPageListState = ActionState.Fail(message = "can't get online movies")
             } catch (cte: ConnectException) {
@@ -97,6 +106,5 @@ class OnlineMovieScreenLogic : ViewModel() {
             }
 
         }
-
     }
 }

@@ -16,13 +16,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import ohior.app.mediarock.service.FileManager
 import ohior.app.mediarock.ui.compose_utils.BottomBarNavigation
 import ohior.app.mediarock.ui.screens.download.DownloadScreen
 import ohior.app.mediarock.ui.screens.local_movie.LocalMovieScreen
-import ohior.app.mediarock.ui.screens.local_movie.LocalMovieScreenLogic
 import ohior.app.mediarock.ui.screens.onboard.OnboardScreen
 import ohior.app.mediarock.ui.screens.online_movie.OnlineMovieScreen
-import ohior.app.mediarock.ui.screens.online_movie.OnlineMovieScreenLogic
 import ohior.app.mediarock.ui.screens.pdfview.PdfScreenLogic
 import ohior.app.mediarock.ui.screens.pdfview.PdfViewScreen
 import ohior.app.mediarock.ui.screens.video.VideoScreen
@@ -44,10 +46,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 //        enableEdgeToEdge()
         installSplashScreen()
+        CoroutineScope(Dispatchers.IO).launch {
+            FileManager.saveVideoAndModifyToDatabase(this@MainActivity)
+        }
         setContent {
             MediaRockTheme {
                 val navController = rememberNavController()
-               Scaffold(bottomBar = {
+                Scaffold(bottomBar = {
                     BottomBarNavigation(
                         navController,
                     )
@@ -68,16 +73,14 @@ class MainActivity : ComponentActivity() {
     fun NavigationComponent(navController: NavHostController) {
         NavHost(navController, startDestination = OnboardType) {
             composable<OnlineMovieType> {
-                val viewModel = viewModel<OnlineMovieScreenLogic>()
-                OnlineMovieScreen(viewModel, navController)
+                OnlineMovieScreen(navController)
             }
             composable<LocalMovieType> {
-                val viewModel = viewModel<LocalMovieScreenLogic>()
-                LocalMovieScreen(viewModel, navController)
+                LocalMovieScreen(navController)
             }
             composable<VideoType> {
                 val viewModel = viewModel<VideoScreenLogic>()
-                VideoScreen(viewModel, it.toRoute<VideoType>(),navController)
+                VideoScreen(viewModel, it.toRoute<VideoType>(), navController)
             }
             composable<DownloadType> {
                 DownloadScreen(it.toRoute<DownloadType>())

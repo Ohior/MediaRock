@@ -13,9 +13,10 @@ import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.AlertDialog
-import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,8 +24,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.viewinterop.AndroidView
 import ohior.app.mediarock.ui.compose_utils.CreateLinearProgressBar
 import ohior.app.mediarock.ui.theme.DeepSize
@@ -77,14 +80,24 @@ fun DownloadScreen(downloadType: DownloadType) {
             backgroundColor = MaterialTheme.colorScheme.background.copy(alpha = 0.7f),
             title = {
                 Text(
-                    text = "wait!😱 wait! 📢 wait!😱",
+                    modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(DeepSize.Small)),
+                    text = "wait! 📢 ✋🏿 wait! 😱",
+                    textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodySmall.copy(
                         fontFamily = primaryFontFamily,
                         fontWeight = FontWeight.Bold,
                     )
                 )
             },
-            text = {                CreateLinearProgressBar(colors = listOf(Color.Red, Color.Yellow, Color.Blue)) },
+            text = {
+                CreateLinearProgressBar(
+                    colors = listOf(
+                        Color.Red,
+                        Color.Yellow,
+                        Color.Blue
+                    )
+                )
+            },
             onDismissRequest = { isPageLoading.value = false },
             buttons = {})
     }

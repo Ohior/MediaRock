@@ -1,7 +1,6 @@
 package ohior.app.mediarock.ui.screens.web_movie_item
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -41,12 +39,10 @@ import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import ohior.app.mediarock.R
 import ohior.app.mediarock.model.RichTextModel
-import ohior.app.mediarock.ui.compose_utils.CreateLinearProgressBar
 import ohior.app.mediarock.ui.compose_utils.DisplayLottieAnimation
 import ohior.app.mediarock.ui.compose_utils.RichText
 import ohior.app.mediarock.ui.compose_utils.createShimmer
 import ohior.app.mediarock.ui.theme.DeepSize
-import ohior.app.mediarock.ui.theme.primaryFontFamily
 import ohior.app.mediarock.utils.ActionState
 import ohior.app.mediarock.utils.DownloadType
 import ohior.app.mediarock.utils.WebMovieItemScreenType
@@ -171,14 +167,6 @@ fun WebMovieItemScreen(
     }
     Column(modifier = Modifier.fillMaxSize()) {
         when (viewModel.isContentLoaded) {
-            is ActionState.None -> {
-                CreateLinearProgressBar(colors = listOf(Color.Red, Color.Yellow, Color.Blue))
-                DisplayLottieAnimation(
-                    modifier = Modifier.size((LocalView.current.width / 2).dp),
-                    resId = R.raw.empty_lottie
-                )
-            }
-
             is ActionState.Success -> {
                 DisplayMoviePage(
                     description = webMovieItemScreenType.description,
@@ -189,13 +177,23 @@ fun WebMovieItemScreen(
 
             is ActionState.Fail -> {
                 DisplayLottieAnimation(
-                    modifier = Modifier.size((LocalView.current.width / 2).dp),
+                    modifier = Modifier.fillMaxSize(),
                     resId = R.raw.error_lottie,
                     text = (viewModel.isContentLoaded as ActionState.Fail).message,
                 )
             }
 
-            is ActionState.Loading -> Unit
+            else -> {
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color.Red,
+                    trackColor = Color.Yellow,
+                )
+                DisplayLottieAnimation(
+                    modifier = Modifier.fillMaxSize(),
+                    resId = R.raw.empty_lottie
+                )
+            }
         }
     }
 }
