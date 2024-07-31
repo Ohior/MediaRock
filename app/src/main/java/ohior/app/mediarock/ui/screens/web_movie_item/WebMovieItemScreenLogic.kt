@@ -26,10 +26,17 @@ class WebMovieItemScreenLogic : ViewModel() {
     val movieInfoList: List<Pair<String, String>> = _movieInfoList
     var isContentLoaded by mutableStateOf<ActionState>(ActionState.None)
 
+    var isPageRefreshing by mutableStateOf(false)
+        private set
+
+    fun setIsPageRefreshing(boolean: Boolean){
+        isPageRefreshing = boolean
+    }
+
 
     fun loadDownloadPage(webMovieItemScreenType: WebMovieItemScreenType) {
         viewModelScope.launch(Dispatchers.IO) {
-            isContentLoaded = ActionState.None
+            isContentLoaded = ActionState.Loading
             _downloadUrlList.clear()
             _movieInfoList.clear()
             try {
@@ -46,9 +53,8 @@ class WebMovieItemScreenLogic : ViewModel() {
                 }
             } catch (e: Exception) {
                 isContentLoaded = ActionState.Fail(message = "There has been a critical error on this page.")
-                debugPrint("DEBUG : "+e.message.toString())
             }
-
+            isPageRefreshing = false
         }
     }
 

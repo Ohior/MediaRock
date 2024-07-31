@@ -1,28 +1,42 @@
 package ohior.app.mediarock.ui.screens.local_movie
 
-import android.content.Context
 import android.os.Build
 import android.provider.MediaStore
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
-import ohior.app.mediarock.convertLongToTime
 import ohior.app.mediarock.debugPrint
-import ohior.app.mediarock.formatFileSize
+import ohior.app.mediarock.generateID
 import ohior.app.mediarock.model.MovieItem
+import ohior.app.mediarock.model.MovieItemFolder
 import ohior.app.mediarock.service.AppDatabase
 
 
 class LocalMovieScreenLogic : ViewModel() {
-    val localMovieList: StateFlow<List<MovieItem>> =
-        AppDatabase.getAllLocalMovies().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+//    val localMovieList: StateFlow<List<MovieItem>> =
+//        AppDatabase.getAllLocalMovies().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-//    private var _localMovieList = mutableStateListOf<MovieItem>()
-//    val localMovieList: List<MovieItem> = AppDatabase.allLocalMovies()
+    private val _localMovieList: List<MovieItem> = AppDatabase.allLocalMovies()
+    var localMovieList by mutableStateOf<List<MovieItem>>(emptyList())
+    var displayFolder by mutableStateOf(true)
+
+    fun localMovieFolderList(): List<MovieItemFolder> {
+        debugPrint("DEBUG : localMovieFolderList")
+        val tempMovieItemFolder = mutableListOf<MovieItemFolder>()
+        for (listItem in _localMovieList) {
+            if (!tempMovieItemFolder.any { it.name == listItem.folderName }) {
+                tempMovieItemFolder.add(
+                    MovieItemFolder(
+                        itemId = generateID(),
+                        name = listItem.folderName,
+                        movies = _localMovieList.filter { it.folderName == listItem.folderName }
+                    )
+                )
+            }
+        }
+        return tempMovieItemFolder
+    }
 
 
     private val collection =
@@ -106,8 +120,24 @@ class LocalMovieScreenLogic : ViewModel() {
 //        }
 //    }
 
-    override fun onCleared() {
-        debugPrint("Local movie cleared")
-        super.onCleared()
-    }
+//    fun getMoviesFolder(): List<MovieItemFolder>{
+//        var folderName = ""
+//        for (movie in localMovieList){
+//            folderName = movie.path.split("/")(2)
+//        }
+//    }
+
+    //    fun getMovieFolderList(): List<MovieItemFolder> {
+//        val folderList = mutableListOf<MovieItemFolder>()
+//        for (movie in localMovieList){
+//            for (folder in folderList){
+//                if (folder.name == movie.name){
+//                    val newFolder = MovieItemFolder(
+//                        name = movie.getFolderName(),
+//                        movies =
+//                    )
+//                }
+//            }
+//        }
+//    }
 }

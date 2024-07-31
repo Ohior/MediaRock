@@ -5,6 +5,7 @@ import io.objectbox.query.Query
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import ohior.app.mediarock.debugPrint
 import ohior.app.mediarock.model.MovieItem
 import ohior.app.mediarock.model.WebPageItem
 import ohior.app.mediarock.model.WebPageItem_
@@ -47,6 +48,7 @@ object AppDatabase {
         query.close()
         return results
     }
+
     //*********************************************************************************************
     // FOR LOCAL MOVIES
     fun allLocalMovies(): List<MovieItem> = localMovieObjectBox.all
@@ -57,7 +59,7 @@ object AppDatabase {
     fun addLocalMovie(movie: MovieItem): Long = localMovieObjectBox.put(movie)
 
     fun deleteLocalMovie(movie: MovieItem): Boolean = localMovieObjectBox.remove(movie)
-    fun deleteManyLocalMovie(movie: List<MovieItem>): Unit = localMovieObjectBox.remove(movie)
+    fun deleteAllLocalMovie(): Unit = localMovieObjectBox.removeAll()
 
     //*********************************************************************************************
 }

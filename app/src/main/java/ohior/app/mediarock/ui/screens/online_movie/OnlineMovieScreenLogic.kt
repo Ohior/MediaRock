@@ -12,12 +12,8 @@ import io.ktor.client.network.sockets.ConnectTimeoutException
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import ohior.app.mediarock.debugPrint
 import ohior.app.mediarock.model.WebPageItem
 import ohior.app.mediarock.service.AppDatabase
 import ohior.app.mediarock.utils.ActionState
@@ -27,37 +23,52 @@ import java.nio.channels.UnresolvedAddressException
 import kotlin.time.Duration.Companion.minutes
 
 class OnlineMovieScreenLogic : ViewModel() {
-    private var _webPageList = mutableStateListOf<WebPageItem>()
-    val databaseList: StateFlow<List<WebPageItem>> =
-        AppDatabase.getAllMovies().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+//    val databaseList: StateFlow<List<WebPageItem>> =
+//        AppDatabase.getAllMovies().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-//    private var _databaseList = mutableStateListOf<WebPageItem>()
-//    val databaseList: List<WebPageItem> = _databaseList
+    private var _onlineDatabaseList = mutableStateListOf<WebPageItem>()
+    val onlineDatabaseList: List<WebPageItem> = _onlineDatabaseList
 
     private val webAddress = "https://9jarocks.net/"
-    private val httpClient = HttpClient(CIO) {
-        engine {
-            requestTimeout = 1.minutes.inWholeMilliseconds
-        }
-    }
+
+    private var _webPageList = mutableStateListOf<WebPageItem>()
     val webPageList: List<WebPageItem> = _webPageList
     var webPageListState by mutableStateOf<ActionState>(ActionState.None)
+    var searchValue by mutableStateOf("")
+    var isPageRefreshing by mutableStateOf(false)
 
     init {
         initWebPageList()
+        _onlineDatabaseList.addAll(AppDatabase.allMovies())
+    }
+
+
+    fun onSearchValueChanged(search: String) {
+        searchValue = search
+        _onlineDatabaseList.clear()
+        if (search.isNotEmpty()) {
+            _onlineDatabaseList.addAll(
+                AppDatabase.allMovies().filter { it.title.contains(search, ignoreCase = true) })
+        } else {
+            _onlineDatabaseList.addAll(AppDatabase.allMovies())
+        }
     }
 
     fun initWebPageList() {
         viewModelScope.launch {
-//            _databaseList.clear()
-//            _databaseList.addAll(AppDatabase.allMovies())
             _webPageList.clear()
             loadWebItems()
+            isPageRefreshing = false
         }
     }
 
     private suspend fun loadWebItems() {
         withContext(Dispatchers.IO) {
+            val httpClient = HttpClient(CIO) {
+                engine {
+                    requestTimeout = 1.minutes.inWholeMilliseconds
+                }
+            }
             try {
                 httpClient.use { client ->
                     webPageListState = ActionState.Loading
@@ -96,7 +107,6 @@ class OnlineMovieScreenLogic : ViewModel() {
                 }
                 webPageListState =
                     if (_webPageList.isEmpty()) ActionState.Fail(message = "Got empty movies from web") else ActionState.Success
-                debugPrint("Done loading movies")
             } catch (cte: UnresolvedAddressException) {
                 webPageListState = ActionState.Fail(message = "can't get online movies")
             } catch (cte: ConnectException) {

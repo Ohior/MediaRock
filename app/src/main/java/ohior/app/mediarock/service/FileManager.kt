@@ -23,6 +23,7 @@ object FileManager {
 
     private val projection = arrayOf(
         MediaStore.Video.Media._ID,
+        MediaStore.Video.Media.BUCKET_DISPLAY_NAME,
         MediaStore.Video.Media.DISPLAY_NAME,
         MediaStore.Video.Media.DURATION,
         MediaStore.Video.Media.SIZE,
@@ -31,7 +32,7 @@ object FileManager {
     )
 
     // Display videos in alphabetical order based on their display name.
-    private val sortOrder = "${MediaStore.Video.Media.DISPLAY_NAME} ASC"
+    private const val sortOrder = "${MediaStore.Video.Media.DISPLAY_NAME} ASC"
 
 
     // Show only videos that are at least 5 minutes in duration.
@@ -53,6 +54,8 @@ object FileManager {
             query?.use { cursor ->
                 // Cache column indices.
                 val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media._ID)
+                val folderColumn =
+                    cursor.getColumnIndexOrThrow(MediaStore.Video.Media.BUCKET_DISPLAY_NAME)
                 val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DISPLAY_NAME)
                 val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.DURATION)
                 val sizeColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.Media.SIZE)
@@ -63,6 +66,7 @@ object FileManager {
                     // Get values of columns for a given video.
                     val id = cursor.getLong(idColumn)
                     val name = cursor.getString(nameColumn)
+                    val folderName = cursor.getString(folderColumn)
                     val duration = cursor.getInt(durationColumn)
                     val size = cursor.getInt(sizeColumn)
                     val path = cursor.getString(pathColumn)
@@ -72,29 +76,28 @@ object FileManager {
                     val movieItem = MovieItem(
                         itemId = id,
                         name = name,
-                        duration = convertLongToTime(duration.toLong()),
-                        size = formatFileSize(size.toLong()),
-                        lastModified = convertLongToTime(modified.toLong(), true),
                         path = path,
+                        folderName = folderName,
+                        durationLong = duration.toLong(),
+                        sizeLong = size.toLong(),
+                        lastModifiedLong = modified.toLong(),
                     )
                     movieList.add(movieItem)
                 }
                 val dbMovies = AppDatabase.allLocalMovies()
-
+                // add movies if they are not in database
                 movieList.forEach { movie ->
                     if (!dbMovies.any { it.itemId == movie.itemId }) {
                         AppDatabase.addLocalMovie(movie)
-                        debugPrint("Adding movie to database")
                     }
                 }
+                // delete movies if they do not exist
                 dbMovies.forEach { movie ->
                     if (!movieList.any { it.itemId == movie.itemId }) {
                         AppDatabase.deleteLocalMovie(movie)
-                        debugPrint("delete movie to database")
                     }
                 }
             }
-
         }
     }
 }

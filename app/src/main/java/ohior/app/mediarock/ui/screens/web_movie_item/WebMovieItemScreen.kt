@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,6 +13,8 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.Error
@@ -40,6 +43,7 @@ import coil.request.ImageRequest
 import ohior.app.mediarock.R
 import ohior.app.mediarock.model.RichTextModel
 import ohior.app.mediarock.ui.compose_utils.DisplayLottieAnimation
+import ohior.app.mediarock.ui.compose_utils.PullToRefresh
 import ohior.app.mediarock.ui.compose_utils.RichText
 import ohior.app.mediarock.ui.compose_utils.createShimmer
 import ohior.app.mediarock.ui.theme.DeepSize
@@ -86,8 +90,7 @@ private fun MovieImage(viewModel: WebMovieItemScreenLogic, description: String) 
     ) {
         SubcomposeAsyncImage(
             modifier = Modifier
-                .fillMaxWidth()
-                .height((LocalView.current.width / 2).dp),
+                .fillMaxWidth(),
             contentScale = ContentScale.FillBounds,
             model = ImageRequest.Builder(LocalContext.current)
                 .data(viewModel.imageUrl)
@@ -165,34 +168,47 @@ fun WebMovieItemScreen(
     LaunchedEffect(key1 = null) {
         viewModel.loadDownloadPage(webMovieItemScreenType)
     }
-    Column(modifier = Modifier.fillMaxSize()) {
-        when (viewModel.isContentLoaded) {
-            is ActionState.Success -> {
-                DisplayMoviePage(
-                    description = webMovieItemScreenType.description,
-                    viewModel = viewModel,
-                    navController
-                )
-            }
+    PullToRefresh(isRefreshing = viewModel.isPageRefreshing, onRefresh = {
+        viewModel.setIsPageRefreshing(true)
+        viewModel.loadDownloadPage(webMovieItemScreenType)
+    }) {
+        Column(modifier = Modifier.fillMaxSize()) {
+            when (viewModel.isContentLoaded) {
+                is ActionState.Success -> {
+                    DisplayMoviePage(
+                        description = webMovieItemScreenType.description,
+                        viewModel = viewModel,
+                        navController
+                    )
+                }
 
-            is ActionState.Fail -> {
-                DisplayLottieAnimation(
-                    modifier = Modifier.fillMaxSize(),
-                    resId = R.raw.error_lottie,
-                    text = (viewModel.isContentLoaded as ActionState.Fail).message,
-                )
-            }
+                is ActionState.Fail -> {
+                    DisplayLottieAnimation(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                        resId = R.raw.error_lottie,
+                        text = (viewModel.isContentLoaded as ActionState.Fail).message,
+                    )
+                }
 
-            else -> {
-                LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = Color.Red,
-                    trackColor = Color.Yellow,
-                )
-                DisplayLottieAnimation(
-                    modifier = Modifier.fillMaxSize(),
-                    resId = R.raw.empty_lottie
-                )
+                is ActionState.Loading -> {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Color.Red,
+                        trackColor = Color.Yellow,
+                    )
+                    DisplayLottieAnimation(
+                        modifier = Modifier.weight(1f),
+                        resId = R.raw.empty_lottie
+                    )
+                }
+                is  ActionState.None->{
+                    DisplayLottieAnimation(
+                        modifier = Modifier.fillMaxSize(),
+                        resId = R.raw.empty_lottie
+                    )
+                }
             }
         }
     }

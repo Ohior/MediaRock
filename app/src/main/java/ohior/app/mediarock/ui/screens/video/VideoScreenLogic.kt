@@ -18,11 +18,6 @@ class VideoScreenLogic : ViewModel() {
     var isControlsDisplayed by mutableStateOf(false)
         private set
 
-
-    init {
-        debugPrint("VideoScreenLogic init")
-    }
-
     fun updateCurrentTime(currentPosition: Int) {
         currentTime = currentPosition
     }

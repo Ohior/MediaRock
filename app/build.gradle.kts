@@ -88,7 +88,7 @@ dependencies {
 //    lottie
     implementation(libs.lottie.compose)
     // pdf viewer
-    implementation(libs.bouquet)
+    implementation("io.github.afreakyelf:Pdf-Viewer:2.1.1")
     // ktor client
     implementation("io.ktor:ktor-client-core:2.3.2")
     implementation("io.ktor:ktor-client-cio:2.3.2") // or ktor-client-okhttp, ktor-client-jetty, etc.

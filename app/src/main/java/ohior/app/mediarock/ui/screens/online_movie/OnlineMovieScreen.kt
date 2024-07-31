@@ -15,10 +15,17 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridItemScope
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.DeleteForever
+import androidx.compose.material.icons.outlined.Sync
+import androidx.compose.material.pullrefresh.PullRefreshIndicator
+import androidx.compose.material.pullrefresh.pullRefresh
+import androidx.compose.material.pullrefresh.rememberPullRefreshState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -27,8 +34,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -37,7 +42,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -178,8 +182,8 @@ private fun LazyStaggeredGridItemScope.DBMovies(webScrap: WebPageItem, onClick: 
 private fun LazyItemScope.NewMoviesRow(webScrap: WebPageItem, onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .width((LocalView.current.width / 3).dp)
-            .height((LocalView.current.width / 2).dp)
+            .width(200.dp)
+            .height(250.dp)
             .padding(DeepSize.Small)
             .clip(MaterialTheme.shapes.small)
             .background(MaterialTheme.colorScheme.tertiary)
@@ -283,46 +287,90 @@ private fun OnlineMovies(
 @Composable
 fun OnlineMovieScreen(navController: NavHostController) {
     val viewModel = viewModel<OnlineMovieScreenLogic>()
-    val databaseList by viewModel.databaseList.collectAsState()
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        when (viewModel.webPageListState) {
-            is ActionState.Success -> {
-                OnlineMovies(
-                    databaseList = databaseList,
-                    webPageList = viewModel.webPageList,
-                    navController
+    PullToRefresh(
+        isRefreshing = viewModel.isPageRefreshing,
+        onRefresh = {
+            viewModel.isPageRefreshing = true
+            viewModel.initWebPageList()
+        }) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            TextField(
+                value = viewModel.searchValue,
+                onValueChange = viewModel::onSearchValueChanged,
+                modifier = Modifier.fillMaxWidth(),
+                textStyle = MaterialTheme.typography.bodySmall,
+                trailingIcon = {
+                    IconButton(onClick = { viewModel.initWebPageList() }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Sync,
+                            contentDescription = "reload movie page list"
+                        )
+                    }
+                },
+                placeholder = {
+                    Text(
+                        text = "search movie(s) from database",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                    )
+                },
+                colors = androidx.compose.material.TextFieldDefaults.textFieldColors(
+                    backgroundColor = MaterialTheme.colorScheme.background.copy(
+                        red = 0.3f,
+                        blue = 0.3f,
+                        green = 0.3f,
+                    ),
+                    textColor = MaterialTheme.colorScheme.onBackground
                 )
-            }
+            )
+            when (viewModel.webPageListState) {
+                is ActionState.Success -> {
+                    OnlineMovies(
+                        databaseList = viewModel.onlineDatabaseList,
+                        webPageList = viewModel.webPageList,
+                        navController
+                    )
+                }
 
-            is ActionState.Fail -> {
-                DisplayLottieAnimation(
-                    modifier = Modifier.fillMaxSize(),
-                    resId = R.raw.error_lottie,
-                    text = (viewModel.webPageListState as ActionState.Fail).message,
-                )
-            }
+                is ActionState.Fail -> {
+                    DisplayLottieAnimation(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .verticalScroll(rememberScrollState()),
+                        resId = R.raw.error_lottie,
+                        text = (viewModel.webPageListState as ActionState.Fail).message,
+                    )
+                }
 
-            else -> {
-                LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth(),
-                    color = Color.Red,
-                    trackColor = Color.Yellow,
-                )
-                if (AppDatabase.allMovies().isEmpty()) {
+                is ActionState.Loading -> {
+                    LinearProgressIndicator(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = Color.Red,
+                        trackColor = Color.Yellow,
+                    )
+                    if (AppDatabase.allMovies().isEmpty()) {
+                        DisplayLottieAnimation(
+                            modifier = Modifier.fillMaxSize(),
+                            resId = R.raw.empty_lottie
+                        )
+                    } else {
+                        OnlineMovies(
+                            databaseList = viewModel.onlineDatabaseList,
+                            webPageList = viewModel.webPageList,
+                            navController
+                        )
+                    }
+
+                }
+
+                is ActionState.None -> {
                     DisplayLottieAnimation(
                         modifier = Modifier.fillMaxSize(),
                         resId = R.raw.empty_lottie
-                    )
-                } else {
-                    OnlineMovies(
-                        databaseList = databaseList,
-                        webPageList = viewModel.webPageList,
-                        navController
                     )
                 }
             }

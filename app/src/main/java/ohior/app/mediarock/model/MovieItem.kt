@@ -11,6 +11,7 @@ import android.util.Size
 import androidx.compose.runtime.Stable
 import io.objectbox.annotation.Entity
 import io.objectbox.annotation.Id
+import ohior.app.mediarock.debugPrint
 import java.io.File
 
 @Stable
@@ -20,10 +21,17 @@ data class MovieItem(
     val itemId: Long,
     val name: String,
     val path: String,
-    val duration: String,
-    val size: String,
-    val lastModified: String,
+    val folderName: String = "",
+    val durationLong: Long = 0,
+    val sizeLong: Long = 0,
+    val lastModifiedLong: Long = 0,
 ) {
+
+//    fun getFolderName(): String{
+//        return path.split("/").getOrElse(-2){
+//            "folder Unknown"
+//        }
+//    }
     fun getThumbnail(context: Context): Bitmap? {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 //            context.contentResolver.loadThumbnail(

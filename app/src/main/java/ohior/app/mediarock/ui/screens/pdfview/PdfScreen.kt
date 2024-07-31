@@ -1,5 +1,7 @@
 package ohior.app.mediarock.ui.screens.pdfview
 
+import android.net.Uri
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
@@ -14,11 +16,16 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import com.rizzi.bouquet.VerticalPDFReader
-import com.rizzi.bouquet.dp
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.LocalLifecycleOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.rajat.pdfviewer.PdfViewerActivity
+import com.rajat.pdfviewer.compose.PdfRendererViewCompose
 import ohior.app.mediarock.R
 import ohior.app.mediarock.ui.compose_utils.DisplayLottieAnimation
 import ohior.app.mediarock.ui.theme.primaryFontFamily
@@ -34,7 +41,7 @@ private fun PdfLottieAnimation(modifier: Modifier = Modifier, onClick: () -> Uni
     ) {
         DisplayLottieAnimation(
             modifier = Modifier
-                .size(LocalView.current.width.dp()),
+                .size((LocalView.current.width / 2).dp),
             resId = R.raw.pdf_lottie
         )
         ElevatedButton(
@@ -62,7 +69,8 @@ private fun PdfLottieAnimation(modifier: Modifier = Modifier, onClick: () -> Uni
 
 // COMPOSE SCREEN
 @Composable
-fun PdfViewScreen(viewModel: PdfScreenLogic) {
+fun PdfViewScreen(navHostController: NavHostController) {
+    val viewModel = viewModel<PdfScreenLogic>()
     val pickPdf =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) { content ->
             content.whenNull {
@@ -78,11 +86,18 @@ fun PdfViewScreen(viewModel: PdfScreenLogic) {
                 pickPdf.launch("application/pdf")
             }
         } else {
-            VerticalPDFReader(
-                state = viewModel.getPdfVerticalState(),
-                modifier = Modifier.fillMaxSize()
+            PdfRendererViewCompose(
+                uri = viewModel.pdfUri,
+                lifecycleOwner = LocalLifecycleOwner.current
             )
-//            RotateScreenButton()
+        }
+    }
+    BackHandler {
+        if (viewModel.isPdfSelected) {
+            viewModel.isPdfSelected = !viewModel.isPdfSelected
+            viewModel.pdfUri = Uri.EMPTY
+        } else {
+            navHostController.popBackStack()
         }
     }
 }
