@@ -5,9 +5,6 @@ import android.os.Build
 import android.provider.MediaStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import ohior.app.mediarock.convertLongToTime
-import ohior.app.mediarock.debugPrint
-import ohior.app.mediarock.formatFileSize
 import ohior.app.mediarock.model.MovieItem
 
 object FileManager {

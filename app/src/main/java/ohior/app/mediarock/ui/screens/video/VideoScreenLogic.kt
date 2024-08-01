@@ -8,7 +8,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import ohior.app.mediarock.debugPrint
 
 class VideoScreenLogic : ViewModel() {
     var isNotLandscape by mutableStateOf(false)
@@ -22,7 +21,7 @@ class VideoScreenLogic : ViewModel() {
         currentTime = currentPosition
     }
 
-    fun updateisNotLandscape(boolean: Boolean) {
+    fun updateIsNotLandscape(boolean: Boolean) {
         isNotLandscape = boolean
     }
 

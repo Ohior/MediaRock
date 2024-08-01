@@ -73,7 +73,7 @@ fun VideoScreen(viewModel: VideoScreenLogic, videoType: VideoType, navController
                         ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                     }
                     viewModel.updateCurrentTime(videoView.currentPosition)
-                    viewModel.updateisNotLandscape(!viewModel.isNotLandscape)
+                    viewModel.updateIsNotLandscape(!viewModel.isNotLandscape)
                     viewModel.updateIsContentDisplayed(!viewModel.isControlsDisplayed)
                 }) {
                 Icon(

@@ -2,7 +2,6 @@ package ohior.app.mediarock.service
 
 import android.content.Context
 import io.objectbox.BoxStore
-import io.objectbox.BoxStoreBuilder
 import ohior.app.mediarock.model.MyObjectBox
 
 object ObjectBox {

@@ -1,6 +1,5 @@
 package ohior.app.mediarock
 
-import android.content.Context
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -23,13 +22,11 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import ohior.app.mediarock.service.AppDatabase
 import ohior.app.mediarock.service.FileManager
-import ohior.app.mediarock.service.ObjectBox
 import ohior.app.mediarock.ui.compose_utils.BottomBarNavigation
 import ohior.app.mediarock.ui.screens.download.DownloadScreen
 import ohior.app.mediarock.ui.screens.local_movie.LocalMovieScreen
 import ohior.app.mediarock.ui.screens.onboard.OnboardScreen
 import ohior.app.mediarock.ui.screens.online_movie.OnlineMovieScreen
-import ohior.app.mediarock.ui.screens.pdfview.PdfScreenLogic
 import ohior.app.mediarock.ui.screens.pdfview.PdfViewScreen
 import ohior.app.mediarock.ui.screens.video.VideoScreen
 import ohior.app.mediarock.ui.screens.video.VideoScreenLogic

@@ -5,7 +5,6 @@ import io.objectbox.query.Query
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import ohior.app.mediarock.debugPrint
 import ohior.app.mediarock.model.MovieItem
 import ohior.app.mediarock.model.WebPageItem
 import ohior.app.mediarock.model.WebPageItem_
