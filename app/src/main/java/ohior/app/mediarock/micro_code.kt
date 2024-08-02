@@ -59,6 +59,6 @@ fun formatFileSize(sizeInBytes: Long): String {
 
 
 fun generateID(): Long {
-    val uuid =  System.nanoTime()
+    val uuid = System.nanoTime()
     return uuid
 }
