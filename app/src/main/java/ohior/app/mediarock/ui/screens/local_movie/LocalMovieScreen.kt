@@ -37,12 +37,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.launch
+import ohior.app.mediarock.R
 import ohior.app.mediarock.convertLongToTime
 import ohior.app.mediarock.formatFileSize
 import ohior.app.mediarock.model.MovieItem
 import ohior.app.mediarock.model.MovieItemFolder
 import ohior.app.mediarock.model.RichTextModel
 import ohior.app.mediarock.service.FileManager
+import ohior.app.mediarock.ui.compose_utils.DisplayLottieAnimation
 import ohior.app.mediarock.ui.compose_utils.PullToRefresh
 import ohior.app.mediarock.ui.compose_utils.RichText
 import ohior.app.mediarock.ui.theme.DeepSize
@@ -244,9 +246,9 @@ fun LocalMovieScreen(navHostController: NavHostController) {
     val scope = rememberCoroutineScope()
     val refresh = remember { mutableStateOf(false) }
     val viewModel = androidx.lifecycle.viewmodel.compose.viewModel<LocalMovieScreenLogic>()
-     var movieItemFolderList = remember {
-         viewModel.localMovieFolderList()
-     }
+    var movieItemFolderList = remember {
+        viewModel.localMovieFolderList()
+    }
     PullToRefresh(
         isRefreshing = refresh.value,
         onRefresh = {
@@ -258,17 +260,25 @@ fun LocalMovieScreen(navHostController: NavHostController) {
             }
         },
         content = {
-            if (viewModel.displayFolder) {
-                DisplayMovieFolder(movieItemFolderList = movieItemFolderList) {
-                    viewModel.displayFolder = !viewModel.displayFolder
-                    viewModel.localMovieList = it
-                }
-            } else {
-                LocalMovieList(
-                    localMovieList = viewModel.localMovieList,
-                    context = context
-                ) { path ->
-                    navHostController.navigate(VideoType(videoPath = path))
+            if (movieItemFolderList.isEmpty()) {
+                DisplayLottieAnimation(
+                    modifier = Modifier.fillMaxSize(),
+                    resId = R.raw.empty_lottie,
+                    text = "Could not find any movie(s)"
+                )
+            }else {
+                if (viewModel.displayFolder) {
+                    DisplayMovieFolder(movieItemFolderList = movieItemFolderList) {
+                        viewModel.displayFolder = !viewModel.displayFolder
+                        viewModel.localMovieList = it
+                    }
+                } else {
+                    LocalMovieList(
+                        localMovieList = viewModel.localMovieList,
+                        context = context
+                    ) { path ->
+                        navHostController.navigate(VideoType(videoPath = path))
+                    }
                 }
             }
         },

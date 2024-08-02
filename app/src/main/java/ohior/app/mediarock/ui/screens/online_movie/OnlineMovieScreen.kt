@@ -22,7 +22,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material.icons.outlined.DeleteForever
-import androidx.compose.material.icons.outlined.Sync
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,14 +30,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -93,7 +96,7 @@ private fun LazyStaggeredGridItemScope.DBMovies(webScrap: WebPageItem, onClick: 
     ) {
         Box(contentAlignment = Alignment.TopEnd) {
             val showPopup = remember { mutableStateOf(false) }
-            var movie: WebPageItem? = null
+            var movie: WebPageItem? by remember { mutableStateOf(null) }
             if (showPopup.value) {
                 AlertDialog(
                     onDismissRequest = { showPopup.value = false },
@@ -158,7 +161,7 @@ private fun LazyStaggeredGridItemScope.DBMovies(webScrap: WebPageItem, onClick: 
                 contentScale = ContentScale.Fit,
                 contentDescription = "Movie Image",
             )
-            IconButton(onClick = { showPopup.value = true; movie = webScrap }) {
+            IconButton(onClick = {  movie = webScrap; showPopup.value = true }) {
                 Icon(
                     tint = MaterialTheme.colorScheme.surface,
                     imageVector = Icons.Outlined.DeleteForever,
@@ -179,8 +182,8 @@ private fun LazyStaggeredGridItemScope.DBMovies(webScrap: WebPageItem, onClick: 
 private fun LazyItemScope.NewMoviesRow(webScrap: WebPageItem, onClick: () -> Unit) {
     Box(
         modifier = Modifier
-            .width(200.dp)
-            .height(250.dp)
+            .width(250.dp)
+            .height(300.dp)
             .padding(DeepSize.Small)
             .clip(MaterialTheme.shapes.small)
             .background(MaterialTheme.colorScheme.tertiary)
@@ -246,8 +249,6 @@ private fun OnlineMovies(
     webPageList: List<WebPageItem>,
     navController: NavHostController
 ) {
-
-
     LazyVerticalStaggeredGrid(columns = StaggeredGridCells.Fixed(2)) {
         item(
             span = StaggeredGridItemSpan.FullLine
@@ -266,7 +267,7 @@ private fun OnlineMovies(
             }
         }
 
-        items(databaseList.size, key = { databaseList[it].id }) { dbMovie ->
+        items(databaseList.size, key = { databaseList[it].itemId }) { dbMovie ->
             DBMovies(webScrap = databaseList[dbMovie]) {
                 navController.navigate(
                     WebMovieItemScreenType(
@@ -284,10 +285,13 @@ private fun OnlineMovies(
 @Composable
 fun OnlineMovieScreen(navController: NavHostController) {
     val viewModel = viewModel<OnlineMovieScreenLogic>()
+    val databaseList by viewModel.databaseList.collectAsState(emptyList())
+    val keyboardController = LocalSoftwareKeyboardController.current
     PullToRefresh(
         isRefreshing = viewModel.isPageRefreshing,
         onRefresh = {
             viewModel.isPageRefreshing = true
+            keyboardController.whenNotNull { it.hide() }
             viewModel.initWebPageList()
         }) {
         Column(
@@ -297,17 +301,9 @@ fun OnlineMovieScreen(navController: NavHostController) {
         ) {
             TextField(
                 value = viewModel.searchValue,
-                onValueChange = viewModel::onSearchValueChanged,
+                onValueChange = { viewModel.onSearchValueChanged(it.trim()) },
                 modifier = Modifier.fillMaxWidth(),
                 textStyle = MaterialTheme.typography.bodySmall,
-                trailingIcon = {
-                    IconButton(onClick = { viewModel.initWebPageList() }) {
-                        Icon(
-                            imageVector = Icons.Outlined.Sync,
-                            contentDescription = "reload movie page list"
-                        )
-                    }
-                },
                 placeholder = {
                     Text(
                         text = "search movie(s) from database",
@@ -327,7 +323,7 @@ fun OnlineMovieScreen(navController: NavHostController) {
             when (viewModel.webPageListState) {
                 is ActionState.Success -> {
                     OnlineMovies(
-                        databaseList = viewModel.onlineDatabaseList,
+                        databaseList = databaseList,
                         webPageList = viewModel.webPageList,
                         navController
                     )
@@ -356,7 +352,7 @@ fun OnlineMovieScreen(navController: NavHostController) {
                         )
                     } else {
                         OnlineMovies(
-                            databaseList = viewModel.onlineDatabaseList,
+                            databaseList = databaseList,
                             webPageList = viewModel.webPageList,
                             navController
                         )

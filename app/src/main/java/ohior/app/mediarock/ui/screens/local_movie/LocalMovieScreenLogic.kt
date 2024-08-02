@@ -6,7 +6,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
-import ohior.app.mediarock.debugPrint
 import ohior.app.mediarock.generateID
 import ohior.app.mediarock.model.MovieItem
 import ohior.app.mediarock.model.MovieItemFolder
@@ -22,7 +21,6 @@ class LocalMovieScreenLogic : ViewModel() {
     var displayFolder by mutableStateOf(true)
 
     fun localMovieFolderList(): List<MovieItemFolder> {
-        debugPrint("DEBUG : localMovieFolderList")
         val tempMovieItemFolder = mutableListOf<MovieItemFolder>()
         for (listItem in _localMovieList) {
             if (!tempMovieItemFolder.any { it.name == listItem.folderName }) {

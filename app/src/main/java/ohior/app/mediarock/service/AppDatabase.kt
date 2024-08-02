@@ -36,6 +36,8 @@ object AppDatabase {
 
     fun deleteMovie(movie: WebPageItem): Boolean = objectBox.remove(movie)
 
+    fun deleteMovie(id:Long): Boolean = objectBox.remove(id)
+
     fun updateMovie(movie: WebPageItem): Long = objectBox.put(movie)
 
     fun getMoviesByKey(movieId: String): MutableList<WebPageItem> {

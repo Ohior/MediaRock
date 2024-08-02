@@ -9,9 +9,11 @@ import androidx.lifecycle.viewModelScope
 import io.ktor.client.HttpClient
 import io.ktor.client.engine.cio.CIO
 import io.ktor.client.network.sockets.ConnectTimeoutException
+import io.ktor.client.plugins.HttpRequestTimeoutException
 import io.ktor.client.request.get
 import io.ktor.client.statement.bodyAsText
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ohior.app.mediarock.model.WebPageItem
@@ -23,11 +25,14 @@ import java.nio.channels.UnresolvedAddressException
 import kotlin.time.Duration.Companion.minutes
 
 class OnlineMovieScreenLogic : ViewModel() {
-//    val databaseList: StateFlow<List<WebPageItem>> =
-//        AppDatabase.getAllMovies().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    var databaseList by mutableStateOf(AppDatabase.getAllMovies()) //.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+        private set
 
-    private var _onlineDatabaseList = mutableStateListOf<WebPageItem>()
-    val onlineDatabaseList: List<WebPageItem> = _onlineDatabaseList
+
+//    private var _onlineDatabaseList = mutableStateListOf<WebPageItem>().apply {
+//        addAll(AppDatabase.allMovies())
+//    }
+//    val onlineDatabaseList: List<WebPageItem> = _onlineDatabaseList
 
     private val webAddress = "https://9jarocks.net/"
 
@@ -39,22 +44,26 @@ class OnlineMovieScreenLogic : ViewModel() {
 
     init {
         initWebPageList()
-        _onlineDatabaseList.addAll(AppDatabase.allMovies())
     }
-
 
     fun onSearchValueChanged(search: String) {
         searchValue = search
-        _onlineDatabaseList.clear()
+//        _onlineDatabaseList.clear()
         if (search.isNotEmpty()) {
-            _onlineDatabaseList.addAll(
-                AppDatabase.allMovies().filter { it.title.contains(search, ignoreCase = true) })
+//            _onlineDatabaseList.addAll(
+//                AppDatabase.allMovies().filter { it.title.contains(search, ignoreCase = true) })
+//            databaseList.filter {list-> list.any { it.title.contains(search,true) } }
+            databaseList =
+                AppDatabase.getAllMovies()
+                    .map { list -> list.filter { it.title.contains(searchValue, true) } }
+//                    .stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
         } else {
-            _onlineDatabaseList.addAll(AppDatabase.allMovies())
+            databaseList = AppDatabase.getAllMovies()
         }
     }
 
     fun initWebPageList() {
+        onSearchValueChanged("")
         viewModelScope.launch {
             _webPageList.clear()
             loadWebItems()
@@ -64,6 +73,7 @@ class OnlineMovieScreenLogic : ViewModel() {
 
     private suspend fun loadWebItems() {
         withContext(Dispatchers.IO) {
+            var newData = false
             val httpClient = HttpClient(CIO) {
                 engine {
                     requestTimeout = 1.minutes.inWholeMilliseconds
@@ -100,21 +110,29 @@ class OnlineMovieScreenLogic : ViewModel() {
                             )
                             _webPageList.add(webPageItem)
                             if (!AppDatabase.allMovies().any { it.itemId == movieId }) {
+                                newData = true
                                 AppDatabase.addMovie(webPageItem)
                             }
                         }
                     }
                 }
+
                 webPageListState =
                     if (_webPageList.isEmpty()) ActionState.Fail(message = "Got empty movies from web") else ActionState.Success
+//                if (newData){
+//                    _onlineDatabaseList.clear()
+//                    _onlineDatabaseList.addAll(AppDatabase.allMovies())
+//                }
             } catch (cte: UnresolvedAddressException) {
                 webPageListState = ActionState.Fail(message = "can't get online movies")
-            } catch (cte: ConnectException) {
-                webPageListState = ActionState.Fail(message = "Error connecting to the internet")
             } catch (cte: ConnectTimeoutException) {
                 webPageListState = ActionState.Fail(message = "There was a connection timeout")
-            }
+            } catch (cte: ConnectException) {
+                webPageListState = ActionState.Fail(message = "Error connecting to the internet")
+            } catch (cte: HttpRequestTimeoutException) {
+                webPageListState = ActionState.Fail(message = "Request timeout has expired")
 
+            }
         }
     }
 }
