@@ -285,8 +285,9 @@ private fun OnlineMovies(
 @Composable
 fun OnlineMovieScreen(navController: NavHostController) {
     val viewModel = viewModel<OnlineMovieScreenLogic>()
-    val databaseList by viewModel.databaseList.collectAsState(emptyList())
+    val databaseList by viewModel.filteredDatabaseList.collectAsState()
     val keyboardController = LocalSoftwareKeyboardController.current
+
     PullToRefresh(
         isRefreshing = viewModel.isPageRefreshing,
         onRefresh = {

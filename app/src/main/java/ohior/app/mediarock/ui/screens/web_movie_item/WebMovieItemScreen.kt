@@ -139,9 +139,11 @@ private fun DisplayMoviePage(
             MovieInfoList(viewModel.movieInfoList)
         }
         items(viewModel.downloadUrlList) { downloadPair ->
-            ElevatedButton(onClick = {
-                navController.navigate(DownloadType(downloadPair.first))
-            }) {
+            ElevatedButton(
+                onClick = {
+                    navController.navigate(DownloadType(downloadPair.first))
+                }
+            ) {
                 Icon(
                     imageVector = Icons.Filled.Download,
                     contentDescription = "download file"
@@ -199,7 +201,8 @@ fun WebMovieItemScreen(
                         resId = R.raw.empty_lottie
                     )
                 }
-                is  ActionState.None->{
+
+                is ActionState.None -> {
                     DisplayLottieAnimation(
                         modifier = Modifier.fillMaxSize(),
                         resId = R.raw.empty_lottie
