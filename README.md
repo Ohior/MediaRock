@@ -5,7 +5,13 @@ Welcome to MediaRock! 🎬📚
 MediaRock is an all-in-one media app for Android that lets you find, download, and watch movies, as well as read PDF files on your device. Whether you’re a movie buff or a bookworm, MediaRock has got you covered!
 
 ## Images
-
+<div style="display:flex; flex-wrap:wrap; gap:10px;">
+<img src="https://github.com/Ohior/MediaRick/blob/e04fb1e6ec868f4d012eddd59d911689fe8243ec/raw/MediaRock1.png?raw=true" width="200"/>
+<img src="https://github.com/Ohior/MediaRick/blob/e04fb1e6ec868f4d012eddd59d911689fe8243ec/raw/MediaRock2.png?raw=true" width="200"/>
+<img src="https://github.com/Ohior/MediaRick/blob/e04fb1e6ec868f4d012eddd59d911689fe8243ec/raw/MediaRock3.png?raw=true" width="200"/>
+<img src="https://github.com/Ohior/MediaRick/blob/e04fb1e6ec868f4d012eddd59d911689fe8243ec/raw/MediaRock4.png?raw=true" width="200"/>
+<img src="https://github.com/Ohior/MediaRick/blob/e04fb1e6ec868f4d012eddd59d911689fe8243ec/raw/MediaRock5.png?raw=true" width="200"/>
+</div>
 
 ## Features
 
