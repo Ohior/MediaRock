@@ -24,7 +24,7 @@ inline fun <T, R> T?.getWhenNotNull(defaultValue: R, block: (T) -> R): R {
 }
 
 fun convertLongToTime(time: Long, isTime: Boolean = false): String {
-    val pattern = if (isTime) "yyyy.MM.dd HH:mm:ss" else "HH:mm:ss"
+    val pattern = if (isTime) "HH:mm:ss" else "yyyy.MM.dd HH:mm:ss"
     val date = Date(time)
     val format = SimpleDateFormat(pattern, Locale.getDefault())
     return format.format(date)

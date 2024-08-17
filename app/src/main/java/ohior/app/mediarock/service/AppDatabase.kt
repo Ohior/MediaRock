@@ -27,9 +27,11 @@ object AppDatabase {
 
     //*********************************************************************************************
     // FOR ONLINE MOVIES
-    fun allMovies(): List<WebPageItem> = objectBox.all
+    fun allMovies(): List<WebPageItem> {
+        return objectBox.all
+    }
     fun getAllMovies(): Flow<List<WebPageItem>> {
-        return objectBox.query().build().asFlow()
+        return objectBox.query().order(WebPageItem_.title).build().asFlow()
     }
 
     fun addMovie(movie: WebPageItem): Long = objectBox.put(movie)

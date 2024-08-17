@@ -15,20 +15,19 @@ import ohior.app.mediarock.service.AppDatabase
 class LocalMovieScreenLogic : ViewModel() {
 //    val localMovieList: StateFlow<List<MovieItem>> =
 //        AppDatabase.getAllLocalMovies().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
-
-    private val _localMovieList: List<MovieItem> = AppDatabase.allLocalMovies()
     var localMovieList by mutableStateOf<List<MovieItem>>(emptyList())
     var displayFolder by mutableStateOf(true)
 
     fun localMovieFolderList(): List<MovieItemFolder> {
+        val movieItemList: List<MovieItem> = AppDatabase.allLocalMovies()
         val tempMovieItemFolder = mutableListOf<MovieItemFolder>()
-        for (listItem in _localMovieList) {
+        for (listItem in movieItemList) {
             if (!tempMovieItemFolder.any { it.name == listItem.folderName }) {
                 tempMovieItemFolder.add(
                     MovieItemFolder(
                         itemId = generateID(),
                         name = listItem.folderName,
-                        movies = _localMovieList.filter { it.folderName == listItem.folderName }
+                        movies = movieItemList.filter { it.folderName == listItem.folderName }
                     )
                 )
             }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.widget.VideoView
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -16,6 +17,14 @@ class VideoScreenLogic : ViewModel() {
         private set
     var isControlsDisplayed by mutableStateOf(false)
         private set
+
+    private var offsetX by   mutableFloatStateOf(0f)
+    private var offsetY by   mutableFloatStateOf(0f)
+
+    fun updateOffset(x: Float, y: Float){
+        offsetX = x
+        offsetY = y
+    }
 
     fun updateCurrentTime(currentPosition: Int) {
         currentTime = currentPosition

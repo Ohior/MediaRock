@@ -14,7 +14,7 @@ android {
         minSdk = 24
         targetSdk = 34
         versionCode = 2
-        versionName = "2.0"
+        versionName = "2.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -24,7 +24,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -94,6 +94,4 @@ dependencies {
     implementation("io.ktor:ktor-client-cio:2.3.2") // or ktor-client-okhttp, ktor-client-jetty, etc.
     // font
     implementation("androidx.compose.ui:ui-text-google-fonts:1.6.8")
-    // datastore
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
 }

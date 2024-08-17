@@ -23,9 +23,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -246,8 +248,9 @@ fun LocalMovieScreen(navHostController: NavHostController) {
     val scope = rememberCoroutineScope()
     val refresh = remember { mutableStateOf(false) }
     val viewModel = androidx.lifecycle.viewmodel.compose.viewModel<LocalMovieScreenLogic>()
-    var movieItemFolderList = remember {
-        viewModel.localMovieFolderList()
+    var movieItemFolderList by remember {
+        mutableStateOf(viewModel.localMovieFolderList())
+
     }
     PullToRefresh(
         isRefreshing = refresh.value,
@@ -268,9 +271,9 @@ fun LocalMovieScreen(navHostController: NavHostController) {
                 )
             }else {
                 if (viewModel.displayFolder) {
-                    DisplayMovieFolder(movieItemFolderList = movieItemFolderList) {
+                    DisplayMovieFolder(movieItemFolderList = movieItemFolderList) {lml->
                         viewModel.displayFolder = !viewModel.displayFolder
-                        viewModel.localMovieList = it
+                        viewModel.localMovieList = lml
                     }
                 } else {
                     LocalMovieList(

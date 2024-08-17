@@ -1,29 +1,33 @@
 package ohior.app.mediarock.ui.compose_utils
 
 import android.app.Activity
+import android.content.Context
 import android.content.pm.ActivityInfo
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.BottomNavigation
-import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ScreenRotation
+import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material.icons.outlined.Movie
-import androidx.compose.material.icons.outlined.PictureAsPdf
 import androidx.compose.material.icons.outlined.Web
 import androidx.compose.material.pullrefresh.PullRefreshIndicator
 import androidx.compose.material.pullrefresh.pullRefresh
 import androidx.compose.material.pullrefresh.rememberPullRefreshState
+import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,6 +37,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
@@ -40,7 +45,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -49,6 +53,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
@@ -66,10 +71,10 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import ohior.app.mediarock.model.RichTextModel
 import ohior.app.mediarock.ui.theme.White
 import ohior.app.mediarock.ui.theme.primaryFontFamily
+import ohior.app.mediarock.utils.AppConstants
 import ohior.app.mediarock.utils.LocalMovieType
 import ohior.app.mediarock.utils.OnboardType
 import ohior.app.mediarock.utils.OnlineMovieType
-import ohior.app.mediarock.utils.PdfViewType
 import ohior.app.mediarock.utils.ScreenHolder
 import ohior.app.mediarock.utils.VideoType
 import ohior.app.mediarock.whenNotNull
@@ -166,6 +171,25 @@ fun AppLifecycleObserver(
     }
 }
 
+@Composable
+private fun RowScope.MyBottomNavigationItem(
+    selected: Boolean,
+    enabled: Boolean,
+    onClick: () -> Unit,
+    icon: @Composable () -> Unit,
+    label: @Composable () -> Unit,
+) {
+    Column(
+        modifier = Modifier
+            .weight(1f)
+            .clickable(enabled = enabled, onClick = onClick),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        icon()
+        if (!selected) label()
+    }
+}
 
 @Composable
 fun BottomBarNavigation(
@@ -182,34 +206,43 @@ fun BottomBarNavigation(
             imageVector = Icons.Outlined.Movie,
             contentDescription = "Local movies"
         ),
-        ScreenHolder(
-            screen = PdfViewType,
-            imageVector = Icons.Outlined.PictureAsPdf,
-            contentDescription = "PDF reader"
-        )
     )
+//        ScreenHolder(
+//            screen = PdfViewType,
+//            imageVector = Icons.Outlined.PictureAsPdf,
+//            contentDescription = "PDF reader"
+//        )
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
+    var displaymenu by remember {
+        mutableStateOf(false)
+    }
 
     currentDestination.whenNotNull { curDes ->
         if (
             !curDes.hierarchy.any { it.hasRoute(VideoType::class) } &&
             !curDes.hierarchy.any { it.hasRoute(OnboardType::class) }
         ) {
-            BottomNavigation(
-                backgroundColor = MaterialTheme.colorScheme.surface.copy(
-                    blue = 0.2f,
-                    red = 0.2f,
-                    green = 0.2f
-                )
-            ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.surface.copy(
+                            blue = 0.2f,
+                            red = 0.2f,
+                            green = 0.2f
+                        )
+                    ),
+                verticalAlignment = Alignment.CenterVertically
+                ) {
                 bottomBar.forEach { bb ->
-                    BottomNavigationItem(
-//                        modifier = Modifier.weight(1F),
-                        alwaysShowLabel = !curDes.hierarchy.any { it.route == bb.screen.javaClass.name },
+                    MyBottomNavigationItem(
+//                        alwaysShowLabel = !curDes.hierarchy.any { it.route == bb.screen.javaClass.name },
                         enabled = !curDes.hierarchy.any { it.route == bb.screen.javaClass.name },
-                        selected = false,//curDes.hierarchy.any { it.route == bb.screen.javaClass.name },
+                        selected = curDes.hierarchy.any { it.route == bb.screen.javaClass.name },
+//                        selected = false,//curDes.hierarchy.any { it.route == bb.screen.javaClass.name },
                         onClick = {
                             navController.navigate(bb.screen) {
                                 // Pop up to the start destination of the graph to
@@ -234,15 +267,60 @@ fun BottomBarNavigation(
                         }
                     )
                 }
+                MyBottomNavigationItem(
+                    enabled = true,
+                    selected = false,//curDes.hierarchy.any { it.route == bb.screen.javaClass.name },
+                    onClick = { displaymenu = !displaymenu },
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Menu,
+                            contentDescription = "more screen menu"
+                        )
+                    },
+                    label = {
+                        Text(text = "Menu", style = MaterialTheme.typography.labelSmall)
+                        DisplayPopupMenu(
+                            modifier = Modifier.background(
+                                color = MaterialTheme.colorScheme.surface.copy(
+                                    blue = 0.2f,
+                                    red = 0.2f,
+                                    green = 0.2f
+                                )
+                            ),
+                            show = displaymenu,
+                            onDismiss = { displaymenu = !displaymenu },
+                            onClick = {
+                                displaymenu = !displaymenu
+                                navController.navigate(it.screen)
+                            },
+                            listItems = AppConstants.bottomMenuItems
+                        ) { menu ->
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = menu.imageVector,
+                                    contentDescription = menu.contentDescription
+                                )
+                                Text(
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                    text = menu.contentDescription,
+                                    fontFamily = primaryFontFamily,
+                                    fontSize = 18.sp
+                                )
+                            }
+                        }
+                    }
+                )
             }
         }
     }
-
 }
 
+
 @Composable
-fun RotateScreenButton(modifier: Modifier = Modifier, isVertical: Boolean) {
-    val context = LocalContext.current
+fun RotateScreenButton(modifier: Modifier = Modifier, isVertical: Boolean, context: Context) {
     IconButton(onClick = {
         (context as Activity).requestedOrientation = if (isVertical) {
             ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -268,6 +346,7 @@ fun CreateLinearProgressBar(
     )
 }
 
+//fun Modifier.clearFocus(colors: List<Color>, speedMillis: Int = 2000): Modifier = composed {}
 fun Modifier.createShimmer(colors: List<Color>, speedMillis: Int = 2000): Modifier = composed {
     val size = remember {
         mutableStateOf(IntSize.Zero)
@@ -315,4 +394,35 @@ fun PullToRefresh(
         )
 
     }
+}
+
+@Composable
+fun <T> DisplayPopupMenu(
+    show: Boolean,
+    onDismiss: () -> Unit,
+    onClick: (T) -> Unit,
+    modifier: Modifier = Modifier,
+    listItems: List<T> = emptyList(),
+    title: @Composable (RowScope.() -> Unit?)? = null,
+    content: @Composable (T) -> Unit
+) {
+//    Box(contentAlignment = alignment) {
+    DropdownMenu(
+        expanded = show,
+        onDismissRequest = { onDismiss() },
+        modifier = modifier
+    ) {
+        if (title != null) {
+            DropdownMenuItem(onClick = { }, content = { title() })
+        }
+        listItems.forEach { item ->
+            DropdownMenuItem(
+                onClick = {
+                    onClick(item)
+                },
+                content = { content(item) }
+            )
+        }
+    }
+//    }
 }

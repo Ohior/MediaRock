@@ -1,5 +1,7 @@
 package ohior.app.mediarock.ui.screens.online_movie
 
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -17,12 +19,12 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.AlertDialog
 import androidx.compose.material.TextField
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.MenuOpen
 import androidx.compose.material.icons.filled.Error
-import androidx.compose.material.icons.filled.Warning
-import androidx.compose.material.icons.outlined.DeleteForever
-import androidx.compose.material3.AlertDialog
+import androidx.compose.material.icons.outlined.Menu
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
@@ -41,10 +43,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import coil.compose.SubcomposeAsyncImage
@@ -54,20 +59,40 @@ import ohior.app.mediarock.getWhenNotNull
 import ohior.app.mediarock.model.WebPageItem
 import ohior.app.mediarock.service.AppDatabase
 import ohior.app.mediarock.ui.compose_utils.DisplayLottieAnimation
+import ohior.app.mediarock.ui.compose_utils.DisplayPopupMenu
 import ohior.app.mediarock.ui.compose_utils.PullToRefresh
 import ohior.app.mediarock.ui.compose_utils.createShimmer
 import ohior.app.mediarock.ui.theme.DeepSize
+import ohior.app.mediarock.ui.theme.primaryFontFamily
 import ohior.app.mediarock.utils.ActionState
+import ohior.app.mediarock.utils.GlobalViewModelStoreOwner
 import ohior.app.mediarock.utils.WebMovieItemScreenType
 import ohior.app.mediarock.whenNotNull
 
 
+val myViewModel = ViewModelProvider(GlobalViewModelStoreOwner)[OnlineMovieScreenLogic::class.java]
+
+private val popupMenuList = listOf("🗑 delete movie", "⭐ toggle favorites")
+
+private val onlineMenuList = listOf(
+    Pair("🎞 All", OnlineMovieScreenLogic.MenuAction.All),
+    Pair("🎬 Movie", OnlineMovieScreenLogic.MenuAction.Movie),
+    Pair("📼 Series", OnlineMovieScreenLogic.MenuAction.Series),
+    Pair("⭐ Favorites", OnlineMovieScreenLogic.MenuAction.Favourite),
+)
+
 @Composable
-private fun MovieDetails(modifier: Modifier, webScrap: WebPageItem, maxDetailLines: Int? = null) {
+private fun MovieDetails(
+    modifier: Modifier,
+    webScrap: WebPageItem,
+    maxDetailLines: Int? = null
+) {
     val style = MaterialTheme.typography
+    val title = if (webScrap.isFavorite) "✨ ${webScrap.title.getWhenNotNull("no title") { it }}"
+    else webScrap.title.getWhenNotNull("no title") { it }
     Column(modifier = modifier) {
         Text(
-            text = webScrap.title.getWhenNotNull("no title") { it },
+            text = title,
             overflow = TextOverflow.Ellipsis,
             maxLines = 2,
             color = MaterialTheme.colorScheme.onPrimary,
@@ -86,49 +111,18 @@ private fun MovieDetails(modifier: Modifier, webScrap: WebPageItem, maxDetailLin
 
 @Composable
 private fun LazyStaggeredGridItemScope.DBMovies(webScrap: WebPageItem, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .padding(DeepSize.Small)
-            .clip(MaterialTheme.shapes.small)
-            .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f))
-            .animateItem()
-            .clickable { onClick() },
-    ) {
-        Box(contentAlignment = Alignment.TopEnd) {
-            val showPopup = remember { mutableStateOf(false) }
-            var movie: WebPageItem? by remember { mutableStateOf(null) }
-            if (showPopup.value) {
-                AlertDialog(
-                    onDismissRequest = { showPopup.value = false },
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Filled.Warning,
-                            contentDescription = "delete warning",
-                            tint = Color.Red
-                        )
-                    },
-                    title = {
-                        Text(text = "Don't delete. Dude")
-                    },
-                    text = {
-                        Text(text = "Seriously, This will delete the movie in history 🎬 and you will not be able to get it back")
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showPopup.value = false }) {
-                            Text(text = "Cancel")
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(onClick = {
-                            movie.whenNotNull {
-                                AppDatabase.deleteMovie(it)
-                                showPopup.value = false
-                            }
-                        }) {
-                            Text(text = "Okay! delete")
-                        }
-                    })
-            }
+    Box(contentAlignment = Alignment.BottomEnd) {
+        var movie: WebPageItem? by remember { mutableStateOf(null) }
+        var movieMenu by remember { mutableStateOf(false) }
+        Column(
+            modifier = Modifier
+                .padding(DeepSize.Small)
+                .clip(MaterialTheme.shapes.small)
+                .background(MaterialTheme.colorScheme.tertiary.copy(alpha = 0.3f))
+                .animateItem()
+                .clickable { onClick() },
+        ) {
+
             SubcomposeAsyncImage(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -161,19 +155,100 @@ private fun LazyStaggeredGridItemScope.DBMovies(webScrap: WebPageItem, onClick: 
                 contentScale = ContentScale.Fit,
                 contentDescription = "Movie Image",
             )
-            IconButton(onClick = {  movie = webScrap; showPopup.value = true }) {
-                Icon(
-                    tint = MaterialTheme.colorScheme.surface,
-                    imageVector = Icons.Outlined.DeleteForever,
-                    contentDescription = "delete from database"
+            MovieDetails(
+                modifier = Modifier
+                    .padding(DeepSize.Small)
+                    .fillMaxWidth(), webScrap
+            )
+        }
+        IconButton(onClick = {
+            movie = webScrap
+            movieMenu = true
+        }) {
+            DisplayPopupMenu(
+                show = movieMenu,
+                onDismiss = { movieMenu = !movieMenu },
+                onClick = {
+                    movieMenu = !movieMenu
+                    if (it.lowercase().contains("delete")) {
+                        myViewModel.menuAction =
+                            OnlineMovieScreenLogic.MenuAction.Delete(data = webScrap)
+                    } else if (it.lowercase().contains("favorite")) {
+                        myViewModel.menuAction =
+                            OnlineMovieScreenLogic.MenuAction.MarkFavourite(data = webScrap)
+                    }
+                },
+                listItems = popupMenuList
+            ) { menu ->
+                Text(
+                    color = MaterialTheme.colorScheme.onSurface,
+                    text = menu,
+                    fontFamily = primaryFontFamily,
+                    fontSize = 18.sp
                 )
             }
+            Icon(
+                tint = MaterialTheme.colorScheme.onSurface,
+                imageVector = Icons.AutoMirrored.Outlined.MenuOpen,
+                contentDescription = "movie menu"
+            )
         }
-        MovieDetails(
-            modifier = Modifier
-                .padding(DeepSize.Small)
-                .fillMaxWidth(), webScrap
+    }
+}
+
+
+@Composable
+private fun MoviePopupMenu(context: Context) {
+    if (myViewModel.menuAction is OnlineMovieScreenLogic.MenuAction.Delete) {
+        val data =
+            (myViewModel.menuAction as OnlineMovieScreenLogic.MenuAction.Delete).data as WebPageItem?
+        AlertDialog(
+            backgroundColor = MaterialTheme.colorScheme.background,
+            onDismissRequest = {
+                myViewModel.menuAction = OnlineMovieScreenLogic.MenuAction.None
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    myViewModel.menuAction = OnlineMovieScreenLogic.MenuAction.None
+                    data.whenNotNull { AppDatabase.deleteMovie(it) }
+                }) {
+                    Text(
+                        "Delete", fontFamily = primaryFontFamily,
+                        fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold,
+                    )
+                }
+
+            },
+            title = {
+                Text(
+                    text = "Delete ${data.getWhenNotNull("") { it.title }}",
+                    fontSize = 16.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.onPrimary
+                )
+            },
+            text = {
+                Text(
+                    text = "If you delete ${data.getWhenNotNull("") { """"${it.title}"""" }}, it will be gone forever",
+                    fontSize = 16.sp,
+                    color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f)
+                )
+            }
         )
+    } else if (myViewModel.menuAction is OnlineMovieScreenLogic.MenuAction.MarkFavourite) {
+        val data =
+            (myViewModel.menuAction as OnlineMovieScreenLogic.MenuAction.MarkFavourite).data as WebPageItem
+        AppDatabase.updateMovie(
+            data.copy(isFavorite = !data.isFavorite)
+        )
+        Toast.makeText(
+            context,
+            if (!data.isFavorite) "${data.title} added to favourite"
+            else "${data.title} removed from favourite",
+            Toast.LENGTH_LONG
+        ).show()
+        myViewModel.menuAction = OnlineMovieScreenLogic.MenuAction.None
     }
 }
 
@@ -284,16 +359,19 @@ private fun OnlineMovies(
 // COMPOSE SCREEN
 @Composable
 fun OnlineMovieScreen(navController: NavHostController) {
-    val viewModel = viewModel<OnlineMovieScreenLogic>()
-    val databaseList by viewModel.filteredDatabaseList.collectAsState()
+    val myViewModel = viewModel<OnlineMovieScreenLogic>()
+    val databaseList by myViewModel.filteredDatabaseList.collectAsState()
+    val focusManager = LocalFocusManager.current
+    LocalContext.current
     val keyboardController = LocalSoftwareKeyboardController.current
-
+    MoviePopupMenu(LocalContext.current)
     PullToRefresh(
-        isRefreshing = viewModel.isPageRefreshing,
+        isRefreshing = myViewModel.isPageRefreshing,
         onRefresh = {
-            viewModel.isPageRefreshing = true
+            myViewModel.isPageRefreshing = true
+            focusManager.clearFocus()
             keyboardController.whenNotNull { it.hide() }
-            viewModel.initWebPageList()
+            myViewModel.initWebPageList()
         }) {
         Column(
             modifier = Modifier
@@ -301,8 +379,8 @@ fun OnlineMovieScreen(navController: NavHostController) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             TextField(
-                value = viewModel.searchValue,
-                onValueChange = { viewModel.onSearchValueChanged(it.trim()) },
+                value = myViewModel.searchValue,
+                onValueChange = { myViewModel.onSearchValueChanged(it.trim()) },
                 modifier = Modifier.fillMaxWidth(),
                 textStyle = MaterialTheme.typography.bodySmall,
                 placeholder = {
@@ -319,13 +397,49 @@ fun OnlineMovieScreen(navController: NavHostController) {
                         green = 0.3f,
                     ),
                     textColor = MaterialTheme.colorScheme.onBackground
-                )
+                ),
+                trailingIcon = {
+                    DisplayPopupMenu(
+                        show = myViewModel.onlineMenu,
+                        onDismiss = { myViewModel.onlineMenu = false },
+                        onClick = { t ->
+                            focusManager.clearFocus()
+                            keyboardController.whenNotNull { it.hide() }
+                            myViewModel.filterByFavorite(t.second)
+                            myViewModel.onlineMenu = false
+                        },
+                        listItems = onlineMenuList,
+                        title = {
+                            Text(
+                                text = "Filter By",
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                fontFamily = primaryFontFamily,
+                                fontSize = 18.sp
+                            )
+                        }
+                    ) { menu ->
+                        Text(
+                            text = menu.first,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontFamily = primaryFontFamily,
+                            fontSize = 18.sp
+                        )
+                    }
+
+
+                    IconButton(onClick = { myViewModel.onlineMenu = !myViewModel.onlineMenu }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Menu,
+                            contentDescription = "Movie page menu"
+                        )
+                    }
+                }
             )
-            when (viewModel.webPageListState) {
+            when (myViewModel.webPageListState) {
                 is ActionState.Success -> {
                     OnlineMovies(
                         databaseList = databaseList,
-                        webPageList = viewModel.webPageList,
+                        webPageList = myViewModel.webPageList,
                         navController
                     )
                 }
@@ -336,7 +450,7 @@ fun OnlineMovieScreen(navController: NavHostController) {
                             .fillMaxSize()
                             .verticalScroll(rememberScrollState()),
                         resId = R.raw.error_lottie,
-                        text = (viewModel.webPageListState as ActionState.Fail).message,
+                        text = (myViewModel.webPageListState as ActionState.Fail).message,
                     )
                 }
 
@@ -354,7 +468,7 @@ fun OnlineMovieScreen(navController: NavHostController) {
                     } else {
                         OnlineMovies(
                             databaseList = databaseList,
-                            webPageList = viewModel.webPageList,
+                            webPageList = myViewModel.webPageList,
                             navController
                         )
                     }

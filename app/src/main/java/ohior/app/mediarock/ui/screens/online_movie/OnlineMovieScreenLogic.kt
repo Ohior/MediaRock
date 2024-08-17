@@ -30,8 +30,6 @@ import java.nio.channels.UnresolvedAddressException
 import kotlin.time.Duration.Companion.minutes
 
 class OnlineMovieScreenLogic : ViewModel() {
-
-    // Original StateFlow of list of WebPageItem
     private val _databaseList: StateFlow<List<WebPageItem>> =
         AppDatabase.getAllMovies().stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
@@ -46,22 +44,48 @@ class OnlineMovieScreenLogic : ViewModel() {
     var webPageListState by mutableStateOf<ActionState>(ActionState.None)
     var searchValue by mutableStateOf("")
     var isPageRefreshing by mutableStateOf(false)
+    var onlineMenu by mutableStateOf(false)
+    var menuAction by mutableStateOf<MenuAction>(MenuAction.None)
+
 
     init {
         initWebPageList()
     }
+
 
     fun onSearchValueChanged(search: String) {
         searchValue = search
         viewModelScope.launch {
             _databaseList
                 .map { list ->
+
                     if (search.isNotEmpty()) {
                         list.filter { webPageItem ->
                             // Your filtering condition, e.g., only include items with id greater than 10
                             webPageItem.title.contains(search, true)
                         }
-                    }else list
+                    } else list
+                }
+                .collect { filteredList ->
+                    _filteredDatabaseList.value = filteredList
+                }
+        }
+    }
+
+    fun filterByFavorite(action: MenuAction) {
+        searchValue = ""
+        viewModelScope.launch {
+            _databaseList
+                .map { list ->
+                    list.filter { item ->
+                        when (action) {
+                            MenuAction.Favourite -> item.isFavorite
+                            MenuAction.Movie -> !item.pageUrl.contains("season", ignoreCase = true)
+                            MenuAction.Series -> item.pageUrl.contains("season", ignoreCase = true)
+                            MenuAction.All -> true
+                            else -> false
+                        }
+                    }
                 }
                 .collect { filteredList ->
                     _filteredDatabaseList.value = filteredList
@@ -124,10 +148,6 @@ class OnlineMovieScreenLogic : ViewModel() {
 
                 webPageListState =
                     if (_webPageList.isEmpty()) ActionState.Fail(message = "Got empty movies from web") else ActionState.Success
-//                if (newData){
-//                    _onlineDatabaseList.clear()
-//                    _onlineDatabaseList.addAll(AppDatabase.allMovies())
-//                }
             } catch (cte: UnresolvedAddressException) {
                 webPageListState = ActionState.Fail(message = "can't get online movies")
             } catch (cte: ConnectTimeoutException) {
@@ -136,8 +156,17 @@ class OnlineMovieScreenLogic : ViewModel() {
                 webPageListState = ActionState.Fail(message = "Error connecting to the internet")
             } catch (cte: HttpRequestTimeoutException) {
                 webPageListState = ActionState.Fail(message = "Request timeout has expired")
-
             }
         }
+    }
+
+    sealed class MenuAction {
+        data class Delete(val data: Any) : MenuAction()
+        data class MarkFavourite(val data: Any) : MenuAction()
+        data object Favourite : MenuAction()
+        data object Series : MenuAction()
+        data object Movie : MenuAction()
+        data object All : MenuAction()
+        data object None : MenuAction()
     }
 }

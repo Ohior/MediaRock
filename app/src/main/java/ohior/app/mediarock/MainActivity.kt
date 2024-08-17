@@ -41,17 +41,6 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 //        enableEdgeToEdge()
         installSplashScreen()
-
-//        CoroutineScope(Dispatchers.IO).launch {
-//            try {
-//                FileManager.saveVideoAndModifyToDatabase(this@MainActivity)
-//            } catch (e: NullPointerException) {
-//                AppDatabase.deleteAllLocalMovie()
-////                FileManager.saveVideoAndModifyToDatabase(this@MainActivity)
-//                Toast.makeText(this@MainActivity,
-//                    "An error occurred. Recreating movies database",Toast.LENGTH_LONG).show()
-//            }
-//        }
         setContent {
             MediaRockTheme {
                 val navController = rememberNavController()

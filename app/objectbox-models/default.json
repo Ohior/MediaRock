@@ -54,7 +54,7 @@
     },
     {
       "id": "2:3735400432469991037",
-      "lastPropertyId": "6:1826990497248527313",
+      "lastPropertyId": "11:6221856025371636580",
       "name": "WebPageItem",
       "properties": [
         {
@@ -87,18 +87,25 @@
           "id": "6:1826990497248527313",
           "name": "pageUrl",
           "type": 9
+        },
+        {
+          "id": "11:6221856025371636580",
+          "name": "isFavorite",
+          "type": 1
         }
       ],
       "relations": []
     }
   ],
-  "lastEntityId": "2:3735400432469991037",
+  "lastEntityId": "3:5459485448852268150",
   "lastIndexId": "0:0",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
   "modelVersionParserMinimum": 5,
-  "retiredEntityUids": [],
+  "retiredEntityUids": [
+    5459485448852268150
+  ],
   "retiredIndexUids": [],
   "retiredPropertyUids": [
     2595633313692016814,
@@ -111,7 +118,13 @@
     1760960771962209981,
     5656837041147778703,
     7264230889003084506,
-    6972183522416969850
+    6972183522416969850,
+    1073717820998819321,
+    6666009304004315711,
+    8896208676127231046,
+    1726286880677825646,
+    174746634503085662,
+    6529233818308038036
   ],
   "retiredRelationUids": [],
   "version": 1
