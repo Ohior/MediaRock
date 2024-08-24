@@ -31,12 +31,21 @@ object AppDatabase {
         return objectBox.all
     }
     fun getAllMovies(): Flow<List<WebPageItem>> {
+        val webPageItems =  objectBox.all
+        webPageItems.forEach { item ->
+            val m = allMovies().filter { item.itemId == it.itemId}
+            if (m.size > 1) {
+                deleteAllMovie(m.drop(1))
+            }
+        }
         return objectBox.query().order(WebPageItem_.title).build().asFlow()
     }
 
     fun addMovie(movie: WebPageItem): Long = objectBox.put(movie)
 
     fun deleteMovie(movie: WebPageItem): Boolean = objectBox.remove(movie)
+
+    fun deleteAllMovie(movies: List<WebPageItem>) = objectBox.remove(movies)
 
     fun deleteMovie(id:Long): Boolean = objectBox.remove(id)
 

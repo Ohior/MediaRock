@@ -6,19 +6,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import io.ktor.client.HttpClient
-import io.ktor.client.engine.cio.CIO
-import io.ktor.client.network.sockets.ConnectTimeoutException
-import io.ktor.client.plugins.HttpRequestTimeoutException
-import io.ktor.client.request.get
-import io.ktor.client.statement.bodyAsText
+import io.ktor.client.*
+import io.ktor.client.engine.cio.*
+import io.ktor.client.network.sockets.*
+import io.ktor.client.plugins.*
+import io.ktor.client.request.*
+import io.ktor.client.statement.*
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import ohior.app.mediarock.model.WebPageItem
@@ -38,7 +33,7 @@ class OnlineMovieScreenLogic : ViewModel() {
     val filteredDatabaseList: StateFlow<List<WebPageItem>> = _filteredDatabaseList.asStateFlow()
 
 
-    private val webAddress = "https://9jarocks.net/"
+    private val webAddress = "https://my9jarocks.info/"
     private var _webPageList = mutableStateListOf<WebPageItem>()
     val webPageList: List<WebPageItem> = _webPageList
     var webPageListState by mutableStateOf<ActionState>(ActionState.None)
@@ -127,10 +122,8 @@ class OnlineMovieScreenLogic : ViewModel() {
                             val imageStyle = gridItem.attr("style")//, "background-image")
                             val regex = """\((.*?)\)""".toRegex()
                             val imageMatch = regex.find(imageStyle)
-                            val imageUrl: String? = imageMatch?.value?.removeSurrounding(
-                                "(",
-                                ")"
-                            )//?.groups?.get(1)?.value
+                            val imageUrl: String? = imageMatch?.value
+                                ?.removeSurrounding("(", ")")//?.groups?.get(1)?.value
                             val webPageItem = WebPageItem(
                                 itemId = movieId ?: System.nanoTime().toString(),
                                 description = description,
@@ -142,6 +135,7 @@ class OnlineMovieScreenLogic : ViewModel() {
                             if (!AppDatabase.allMovies().any { it.itemId == movieId }) {
                                 AppDatabase.addMovie(webPageItem)
                             }
+
                         }
                     }
                 }

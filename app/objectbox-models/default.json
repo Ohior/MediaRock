@@ -66,7 +66,9 @@
         {
           "id": "2:6289272389942304594",
           "name": "itemId",
-          "type": 9
+          "indexId": "3:914206090184865879",
+          "type": 9,
+          "flags": 34848
         },
         {
           "id": "3:4942103890760400625",
@@ -98,7 +100,7 @@
     }
   ],
   "lastEntityId": "3:5459485448852268150",
-  "lastIndexId": "0:0",
+  "lastIndexId": "3:914206090184865879",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
@@ -106,7 +108,10 @@
   "retiredEntityUids": [
     5459485448852268150
   ],
-  "retiredIndexUids": [],
+  "retiredIndexUids": [
+    3171006670989049177,
+    7527180262328077070
+  ],
   "retiredPropertyUids": [
     2595633313692016814,
     7012036506880985227,

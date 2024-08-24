@@ -54,7 +54,7 @@
     },
     {
       "id": "2:3735400432469991037",
-      "lastPropertyId": "10:6529233818308038036",
+      "lastPropertyId": "11:6221856025371636580",
       "name": "WebPageItem",
       "properties": [
         {
@@ -71,7 +71,9 @@
         {
           "id": "3:4942103890760400625",
           "name": "title",
-          "type": 9
+          "indexId": "2:7527180262328077070",
+          "type": 9,
+          "flags": 34848
         },
         {
           "id": "4:2739277754023746109",
@@ -89,16 +91,16 @@
           "type": 9
         },
         {
-          "id": "10:6529233818308038036",
-          "name": "webPageItemOptions",
-          "type": 9
+          "id": "11:6221856025371636580",
+          "name": "isFavorite",
+          "type": 1
         }
       ],
       "relations": []
     }
   ],
   "lastEntityId": "3:5459485448852268150",
-  "lastIndexId": "0:0",
+  "lastIndexId": "2:7527180262328077070",
   "lastRelationId": "0:0",
   "lastSequenceId": "0:0",
   "modelVersion": 5,
@@ -106,7 +108,9 @@
   "retiredEntityUids": [
     5459485448852268150
   ],
-  "retiredIndexUids": [],
+  "retiredIndexUids": [
+    3171006670989049177
+  ],
   "retiredPropertyUids": [
     2595633313692016814,
     7012036506880985227,
@@ -123,7 +127,8 @@
     6666009304004315711,
     8896208676127231046,
     1726286880677825646,
-    174746634503085662
+    174746634503085662,
+    6529233818308038036
   ],
   "retiredRelationUids": [],
   "version": 1
