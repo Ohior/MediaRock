@@ -329,9 +329,10 @@ private fun OnlineMovies(
             span = StaggeredGridItemSpan.FullLine
         ) {
             LazyRow {
-                items(webPageList.size, key = {
-                    databaseList[it].itemId
-                }) { web ->
+                items(
+                    webPageList.size,
+//                    key = { webPageList[it].itemId }
+                ) { web ->
                     NewMoviesRow(webScrap = webPageList[web]) {
                         navController.navigate(
                             WebMovieItemScreenType(
@@ -343,7 +344,7 @@ private fun OnlineMovies(
                 }
             }
         }
-        items(databaseList.size, key = {k->
+        items(databaseList.size, key = { k ->
             databaseList[k].itemId
         }) { dbMovie ->
             DBMovies(webScrap = databaseList[dbMovie]) {

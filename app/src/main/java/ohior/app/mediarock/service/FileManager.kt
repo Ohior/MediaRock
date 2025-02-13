@@ -72,9 +72,9 @@ object FileManager {
                     // Stores column values, the contentUri, and the thumbnail in a local object.
                     val movieItem = MovieItem(
                         itemId = id,
-                        name = name,
+                        name = name ?: path.split("/").last(),
                         path = path,
-                        folderName = folderName,
+                        folderName = folderName ?: "",
                         durationLong = duration.toLong(),
                         sizeLong = size.toLong(),
                         lastModifiedLong = modified.toLong(),
